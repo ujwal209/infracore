@@ -78,7 +78,7 @@ function Navbar() {
             <Cpu size={18} className="text-[#01005A] dark:text-[#6B8AFF]" />
           </div>
           <span className="font-black tracking-tighter uppercase text-xl italic text-slate-900 dark:text-white">
-            INFRA<span className="text-[#01005A] dark:text-[#6B8AFF]">CORE</span>
+            INFERA<span className="text-[#01005A] dark:text-[#6B8AFF]">CORE</span>
           </span>
         </Link>
 

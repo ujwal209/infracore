@@ -21,7 +21,7 @@ const TEAM_MEMBERS = [
     name: 'K.V. Maheedhara Kashyap', 
     role: 'Founder & CEO', 
     type: 'leadership',
-    desc: 'Driving the strategic vision and core architecture of the Infracore intelligence network.',
+    desc: 'Driving the strategic vision and core architecture of th INFERA CORE intelligence network.',
     icon: <Target size={24} />
   },
   { 
@@ -196,7 +196,7 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center flex flex-col items-center">
           <div className="mb-8 px-4 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-full shadow-sm flex items-center gap-2.5 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <ShieldCheck size={14} className="text-[#01005A] dark:text-[#6B8AFF]" />
-            <span className="font-bold uppercase tracking-widest text-[10px] sm:text-xs text-slate-600 dark:text-slate-400">The Infracore Mission</span>
+            <span className="font-bold uppercase tracking-widest text-[10px] sm:text-xs text-slate-600 dark:text-slate-400">Th  INFERA CORE Mission</span>
           </div>
           
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight mb-6 leading-[1.1] max-w-4xl text-slate-900 dark:text-white animate-in fade-in slide-in-from-bottom-5 duration-700 delay-100">
@@ -205,7 +205,7 @@ export default function AboutPage() {
           </h1>
           
           <p className="text-slate-500 dark:text-slate-400 text-base sm:text-lg md:text-xl mb-10 leading-relaxed max-w-3xl font-medium animate-in fade-in slide-in-from-bottom-6 duration-700 delay-200">
-            Infracore is the premier engineering intelligence platform designed to bridge the gap between academic foundations and industrial demands. We synthesize global market signals and dynamic data architecture to empower the next generation of builders.
+          INFERA CORE is the premier engineering intelligence platform designed to bridge the gap between academic foundations and industrial demands. We synthesize global market signals and dynamic data architecture to empower the next generation of builders.
           </p>
         </div>
       </section>
@@ -230,7 +230,7 @@ export default function AboutPage() {
               </div>
               <h3 className="text-xl font-black uppercase tracking-tight text-slate-900 dark:text-white">The Infrastructure</h3>
               <p className="text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                Built on a foundation of advanced data architecture, Infracore actively scrapes, analyzes, and structures millions of data points across the engineering landscape to formulate precise roadmaps.
+                Built on a foundation of advanced data architecture INFERA CORE actively scrapes, analyzes, and structures millions of data points across the engineering landscape to formulate precise roadmaps.
               </p>
             </div>
 
@@ -259,7 +259,7 @@ export default function AboutPage() {
               The Architecture Core
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-lg font-medium">
-              The engineering minds and data specialists building the Infracore nexus.
+              The engineering minds and data specialists building th  INFERA CORE nexus.
             </p>
           </div>
 
@@ -319,7 +319,7 @@ export default function AboutPage() {
           </div>
           
           <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center md:text-right">
-            © 2026 Infracore. All rights reserved.
+            © 202 INFERA CORE. All rights reserved.
           </p>
         </div>
       </footer>

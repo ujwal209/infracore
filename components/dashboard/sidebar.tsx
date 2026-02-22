@@ -66,7 +66,7 @@ export function Sidebar({ userEmail, loading = false }: SidebarProps) {
             <Cpu size={16} className="text-[#01005A] dark:text-[#6B8AFF]" />
           </div>
           <span className="font-black tracking-tighter uppercase text-lg italic text-slate-900 dark:text-white truncate">
-            INFRA<span className="text-[#01005A] dark:text-[#6B8AFF]">CORE</span>
+            INFERA<span className="text-[#01005A] dark:text-[#6B8AFF]">CORE</span>
           </span>
         </Link>
       </div>
