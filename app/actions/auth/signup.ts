@@ -67,7 +67,7 @@ export async function signupWithGoogleAction() {
   
   // HARDCODED PRODUCTION URL
   // This physically forces Supabase to use the prod URL.
-  const origin = 'https://infracoreai.vercel.app'
+  const origin = 'https://inferacore.vercel.app'
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
