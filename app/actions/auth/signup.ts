@@ -3,8 +3,22 @@
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/utils/supabase/server'
 import { sendOtpEmail } from '@/utils/email'
-import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
+
+// Helper function to reliably get the base URL in any environment
+const getURL = () => {
+  let url =
+    process?.env?.NEXT_PUBLIC_SITE_URL ?? // Set this to your production URL in Vercel/Netlify
+    process?.env?.NEXT_PUBLIC_VERCEL_URL ?? // Automatically set by Vercel
+    'http://localhost:3000'
+
+  // Ensure it includes the protocol
+  url = url.includes('http') ? url : `https://${url}`
+  // Ensure it does not end with a trailing slash so we can append easily
+  url = url.charAt(url.length - 1) === '/' ? url.slice(0, -1) : url
+  
+  return url
+}
 
 // Admin client for bypassing RLS to create profiles during signup
 const supabaseAdmin = createAdminClient(
@@ -66,11 +80,8 @@ export async function verifySignupOtp(email: string, otp: string) {
 export async function signupWithGoogleAction() {
   const supabase = await createServerClient()
   
-  // Dynamically get the current URL from request headers
-  const headersList = await headers()
-  const host = headersList.get('host')
-  const protocol = headersList.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https')
-  const origin = `${protocol}://${host}`
+  // Get the reliable absolute URL
+  const origin = getURL()
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
