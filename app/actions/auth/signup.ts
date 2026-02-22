@@ -4,21 +4,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/utils/supabase/server'
 import { sendOtpEmail } from '@/utils/email'
 import { redirect } from 'next/navigation'
-
-// Helper function to reliably get the base URL in any environment
-const getURL = () => {
-  let url =
-    process?.env?.NEXT_PUBLIC_SITE_URL ?? // Set this to your production URL in Vercel/Netlify
-    process?.env?.NEXT_PUBLIC_VERCEL_URL ?? // Automatically set by Vercel
-    'http://localhost:3000'
-
-  // Ensure it includes the protocol
-  url = url.includes('http') ? url : `https://${url}`
-  // Ensure it does not end with a trailing slash so we can append easily
-  url = url.charAt(url.length - 1) === '/' ? url.slice(0, -1) : url
-  
-  return url
-}
+import { headers } from 'next/headers'
 
 // Admin client for bypassing RLS to create profiles during signup
 const supabaseAdmin = createAdminClient(
@@ -80,8 +66,14 @@ export async function verifySignupOtp(email: string, otp: string) {
 export async function signupWithGoogleAction() {
   const supabase = await createServerClient()
   
-  // Get the reliable absolute URL
-  const origin = getURL()
+  // Read the host to determine if we are developing locally.
+  // If not localhost, strictly use the production Vercel URL.
+  const headersList = await headers()
+  const host = headersList.get('host') || ''
+  
+  const origin = host.includes('localhost') 
+    ? 'http://localhost:3000' 
+    : 'https://infracore.vercel.app'
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
