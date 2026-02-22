@@ -2,7 +2,6 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
 import { createClient } from '@/utils/supabase/server'
 
 // ------------------------------------------------------------------
@@ -38,14 +37,9 @@ export async function loginAction(formData: FormData) {
 export async function loginWithGoogleAction() {
   const supabase = await createClient()
   
-  // Read the host to determine if we are developing locally.
-  // If not localhost, strictly use the production Vercel URL.
-  const headersList = await headers()
-  const host = headersList.get('host') || ''
-  
-  const origin = host.includes('localhost') 
-    ? 'http://localhost:3000' 
-    : 'https://infracore.vercel.app'
+  // HARDCODED PRODUCTION URL
+  // This physically forces Supabase to use the prod URL.
+  const origin = 'https://infracore.vercel.app'
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
