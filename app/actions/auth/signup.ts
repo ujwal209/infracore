@@ -3,13 +3,18 @@
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/utils/supabase/server'
 import { sendOtpEmail } from '@/utils/email'
+import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
 
+// Admin client for bypassing RLS to create profiles during signup
 const supabaseAdmin = createAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// 1. GENERATE OTP
+// ------------------------------------------------------------------
+// 1. GENERATE OTP (Email & Password Signup)
+// ------------------------------------------------------------------
 export async function initiateSignup(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
@@ -39,7 +44,9 @@ export async function initiateSignup(formData: FormData) {
   }
 }
 
+// ------------------------------------------------------------------
 // 2. VERIFY OTP
+// ------------------------------------------------------------------
 export async function verifySignupOtp(email: string, otp: string) {
   const supabase = await createServerClient()
   
@@ -51,4 +58,38 @@ export async function verifySignupOtp(email: string, otp: string) {
 
   if (error) return { error: "Invalid or expired code." }
   return { success: true }
+}
+
+// ------------------------------------------------------------------
+// 3. GOOGLE OAUTH SIGNUP
+// ------------------------------------------------------------------
+export async function signupWithGoogleAction() {
+  const supabase = await createServerClient()
+  
+  // Dynamically get the current URL from request headers
+  const headersList = await headers()
+  const host = headersList.get('host')
+  const protocol = headersList.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https')
+  const origin = `${protocol}://${host}`
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      // Must exactly match the redirect URL configured in Google Cloud & Supabase
+      redirectTo: `${origin}/auth/callback`, 
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      },
+    },
+  })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  // Redirect the user to the Google Authentication screen
+  if (data.url) {
+    redirect(data.url)
+  }
 }
