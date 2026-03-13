@@ -2,33 +2,11 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/utils/supabase/server";
-import Groq from "groq-sdk";
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
-
-// --- TOOLS & LOGIC ---
-async function web_search(query: string) {
-  const response = await fetch("https://api.tavily.com/search", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ api_key: process.env.TAVILY_API_KEY, query, max_results: 3 }),
-  });
-  const data = await response.json();
-  return JSON.stringify(data.results || []);
-}
-
-const TOOLS_SCHEMA = [{
-  type: "function",
-  function: {
-    name: "web_search",
-    description: "Search for Indian engineering courses and tech trends.",
-    parameters: { type: "object", properties: { query: { type: "string" } }, required: ["query"] },
-  },
-}];
 
 // --- SESSION MANAGEMENT ---
 
@@ -69,6 +47,7 @@ export async function sendCoachingMessage(sessionId: string | null, content: str
   const { data: { user } } = await supabaseAuth.auth.getUser();
   if (!user) throw new Error("Unauthorized");
 
+  // 1. Resolve or Create Session
   let currentSessionId = sessionId;
   if (!currentSessionId) {
     const { data: session } = await supabaseAdmin
@@ -78,35 +57,50 @@ export async function sendCoachingMessage(sessionId: string | null, content: str
     currentSessionId = session.id;
   }
 
-  await supabaseAdmin.from('chat_messages').insert({ session_id: currentSessionId, role: 'user', content });
-
-  const history = await getChatMessages(currentSessionId);
-  const messages: any[] = [
-    { role: "system", content: "You are Architect Prime. Expert in Indian Engineering. Use Markdown tables." },
-    ...history
-  ];
-
-  const response = await groq.chat.completions.create({
-    model: "llama-3.1-8b-instant",
-    messages,
-    tools: TOOLS_SCHEMA as any,
+  // 2. Save the user message to DB
+  await supabaseAdmin.from('chat_messages').insert({ 
+    session_id: currentSessionId, 
+    role: 'user', 
+    content 
   });
 
-  const responseMessage = response.choices[0].message;
-  let finalContent = responseMessage.content;
+  let finalContent = "";
 
-  if (responseMessage.tool_calls) {
-    messages.push(responseMessage);
-    for (const toolCall of responseMessage.tool_calls) {
-      const result = await web_search(JSON.parse(toolCall.function.arguments).query);
-      messages.push({ tool_call_id: toolCall.id, role: "tool", name: "web_search", content: result });
+  // 3. Send request to Agent with EMPTY history as requested
+  try {
+    const response = await fetch("https://inferaagent.onrender.com/api/v1/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        message: content, 
+        history: [] // Always empty
+      }),
+    });
+
+    if (!response.ok) {
+       const errorText = await response.text();
+       throw new Error(`Agent Error: ${response.status} - ${errorText}`);
     }
-    const secondRes = await groq.chat.completions.create({ model: "llama-3.1-8b-instant", messages });
-    finalContent = secondRes.choices[0].message.content;
+
+    const data = await response.json();
+    finalContent = data.response || data.answer || data.message;
+
+  } catch (error: any) {
+    console.error("Fetch Error:", error);
+    finalContent = "### ⨯ ERROR\nNeural link disrupted. Check your Render logs.";
   }
 
-  await supabaseAdmin.from('chat_messages').insert({ session_id: currentSessionId, role: 'assistant', content: finalContent });
-  await supabaseAdmin.from('chat_sessions').update({ updated_at: new Date().toISOString() }).eq('id', currentSessionId);
+  // 4. Save Assistant response to DB
+  await supabaseAdmin.from('chat_messages').insert({ 
+    session_id: currentSessionId, 
+    role: 'assistant', 
+    content: finalContent 
+  });
+
+  // 5. Update timestamp
+  await supabaseAdmin.from('chat_sessions').update({ 
+    updated_at: new Date().toISOString() 
+  }).eq('id', currentSessionId);
 
   return { sessionId: currentSessionId, content: finalContent };
 }

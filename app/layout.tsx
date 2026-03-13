@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   title: "Infracore | Global Engineering Intelligence",
   description: "Join the most advanced engineering intelligence network. Access automated skill gap analysis, dynamic career roadmapping, and cross-domain market signals.",
   keywords: ["Engineering", "Career Roadmap", "Intelligence Network", "Skill Gap Analysis", "Tech Trends"],
-  authors: [{ name: "Infracore System" }],
+  authors: [{ name: "Inferacore System" }],
   icons: {
     icon: "/favicon.ico", // Ensure you have a favicon in your public folder
   },
