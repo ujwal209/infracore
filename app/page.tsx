@@ -381,7 +381,7 @@ export default function LandingPage() {
           <Link href="/" className="flex items-center gap-2 group shrink-0">
             <Cpu size={16} className="text-zinc-900 dark:text-zinc-50" />
             <span className="font-bold tracking-tight uppercase text-sm italic text-zinc-900 dark:text-zinc-50">
-              INFRA<span className="text-blue-600 dark:text-blue-500">CORE</span>
+              INFERA<span className="text-blue-600 dark:text-blue-500">CORE</span>
             </span>
           </Link>
           

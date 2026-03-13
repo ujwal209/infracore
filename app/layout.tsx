@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Infracore | Global Engineering Intelligence",
+  title: "Inferacore | Global Engineering Intelligence",
   description: "Join the most advanced engineering intelligence network. Access automated skill gap analysis, dynamic career roadmapping, and cross-domain market signals.",
   keywords: ["Engineering", "Career Roadmap", "Intelligence Network", "Skill Gap Analysis", "Tech Trends"],
   authors: [{ name: "Inferacore System" }],
