@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import { supabaseAdmin } from '@/utils/supabase/admin'
+import { DashboardNavbar } from '@/components/dashboard/dashboard-navbar'
 
 export default async function DashboardLayout({
   children,
@@ -28,5 +29,12 @@ export default async function DashboardLayout({
   }
 
   // Render Dashboard
-  return <>{children}</>
+  return (
+    <div className="flex flex-col h-screen overflow-hidden">
+      <DashboardNavbar userEmail={user.email} />
+      <div className="flex-1 overflow-hidden">
+        {children}
+      </div>
+    </div>
+  )
 }   

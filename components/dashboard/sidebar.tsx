@@ -5,27 +5,15 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { logoutAction } from '@/app/actions/auth/logout'
 import { 
-  Cpu, 
-  LayoutDashboard, 
-  Map as MapIcon, 
-  MessageSquare, 
-  LogOut, 
-  Settings,
-  ShieldCheck,
+  Home,
+  Newspaper,
+  User,
+  MessageSquare,
   Loader2,
-  FileText,
-  Search,
-  Database,
-  Trophy,
-  Briefcase,
-  TrendingUp,
-  Map,
-  Code,
-  Building2,
-  School,
-  BookOpen,
-  User
+  Settings,
+  LogOut
 } from 'lucide-react'
+import Image from 'next/image'
 
 interface SidebarProps {
   userEmail?: string
@@ -34,42 +22,15 @@ interface SidebarProps {
 
 export function Sidebar({ userEmail, loading = false }: SidebarProps) {
   const pathname = usePathname()
-  const [searchQuery, setSearchQuery] = React.useState('')
 
   const navGroups = [
     {
-      label: 'Platform Core',
+      label: 'Intelligence Terminal',
       items: [
-        { name: 'Overview', path: '/dashboard', icon: LayoutDashboard },
-        { name: 'Roadmaps', path: '/dashboard/roadmaps', icon: MapIcon },
+        { name: 'Home', path: '/dashboard', icon: Home },
+        { name: 'News Feed', path: '/news', icon: Newspaper },
         { name: 'AI Mentor', path: '/dashboard/chat', icon: MessageSquare },
-        { name: 'Resume Analyzer', path: '/dashboard/resume', icon: FileText },
-      ]
-    },
-    {
-      label: 'Knowledge Base',
-      items: [
-        { name: 'AICTE Branches', path: '/dashboard/database/branches', icon: Database },
-        { name: 'Universities', path: '/dashboard/database/universities', icon: Building2 },
-        { name: 'Eng. Colleges', path: '/dashboard/database/colleges', icon: School },
-        { name: 'NIRF Engineering', path: '/dashboard/database/rankings/engineering', icon: Trophy },
-        { name: 'NIRF University', path: '/dashboard/database/rankings/university', icon: Trophy },
-      ]
-    },
-    {
-      label: 'Career Intelligence',
-      items: [
-        { name: 'Branch Courses', path: '/dashboard/database/branches/courses', icon: BookOpen },
-        { name: 'Job Roles', path: '/dashboard/database/branches/roles', icon: Briefcase },
-        { name: 'Salaries', path: '/dashboard/database/branches/salaries', icon: TrendingUp },
-        { name: 'Roadmaps', path: '/dashboard/database/branches/roadmaps', icon: Map },
-        { name: 'Tech Domains', path: '/dashboard/database/branches/domains', icon: Code },
-      ]
-    },
-    {
-      label: 'Account',
-      items: [
-        { name: 'Profile', path: '/dashboard/profile', icon: User },
+        { name: 'Profile', path: '/profile', icon: User },
       ]
     }
   ]
@@ -85,52 +46,38 @@ export function Sidebar({ userEmail, loading = false }: SidebarProps) {
   }
 
   return (
-    <div className="h-full w-full flex flex-col bg-zinc-50/50 dark:bg-zinc-950/50 font-sans border-r border-zinc-200 dark:border-zinc-800 transition-colors duration-300">
+    <div className="h-full w-full flex flex-col bg-white dark:bg-[#09090b] font-sans border-r border-zinc-200 dark:border-zinc-800 transition-all duration-300">
       
-      {/* 1. Branding Header */}
-      <div className="h-16 flex-shrink-0 border-b border-zinc-200 dark:border-zinc-800 flex items-center px-6 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md z-10">
-        <Link href="/" className="inline-flex items-center gap-2 group min-w-0">
-          <div className="bg-blue-50 dark:bg-blue-500/10 p-1.5 rounded-lg group-hover:rotate-12 transition-transform duration-500 shadow-sm border border-blue-100 dark:border-blue-500/20 shrink-0">
-            <Cpu size={16} className="text-blue-600 dark:text-blue-500" />
-          </div>
-          <span className="font-bold tracking-tight uppercase text-lg italic text-zinc-900 dark:text-white truncate">
-            INFERA<span className="text-blue-600 dark:text-blue-500">CORE</span>
-          </span>
+      {/* 1. Branding Header - High Spacing & Centered */}
+      <div className="h-24 flex-shrink-0 flex items-center px-8 z-10 pt-4">
+        <Link href="/" className="inline-flex items-center group transition-transform hover:scale-[1.02]">
+          <Image 
+            src="/logo.png" 
+            alt="Infracore Logo" 
+            width={180} 
+            height={60} 
+            className="h-10 w-auto object-contain transition-all dark:invert dark:brightness-[10]"
+            priority
+          />
         </Link>
       </div>
 
-      {/* 2. Menu Filter */}
-      <div className="px-4 pt-5 pb-2 shrink-0">
-        <div className="relative group">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-500 transition-colors" />
-          <input 
-            type="text"
-            placeholder="Filter menu..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all text-zinc-700 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 shadow-sm"
-          />
-        </div>
+      <div className="px-6 mb-8 mt-4">
+        <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-zinc-200 dark:via-zinc-800 to-transparent opacity-50" />
       </div>
 
-      {/* 3. Main Navigation */}
-      <nav className="flex-1 px-4 pb-6 overflow-y-auto custom-scrollbar space-y-6 mt-2">
-        {navGroups.map((group, idx) => {
-          const filteredItems = group.items.filter(item => 
-            item.name.toLowerCase().includes(searchQuery.toLowerCase())
-          )
-
-          if (filteredItems.length === 0) return null;
-
-          return (
-            <div key={idx} className="space-y-1.5">
-              <div className="px-2 mb-2">
-                <p className="text-[10px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider truncate">
-                  {group.label}
-                </p>
-              </div>
-              
-              {filteredItems.map((item) => {
+      {/* 2. Main Navigation - Professional Spacing */}
+      <nav className="flex-1 px-4 overflow-y-auto custom-scrollbar space-y-8">
+        {navGroups.map((group, idx) => (
+          <div key={idx} className="space-y-3">
+            <div className="px-4 mb-4">
+              <p className="text-[11px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.2em]">
+                {group.label}
+              </p>
+            </div>
+            
+            <div className="space-y-1">
+              {group.items.map((item) => {
                 const isActive = item.path === '/dashboard' 
                   ? pathname === item.path 
                   : pathname.startsWith(item.path)
@@ -139,67 +86,58 @@ export function Sidebar({ userEmail, loading = false }: SidebarProps) {
                   <Link
                     key={item.path}
                     href={item.path}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all min-w-0 group ${
+                    className={`flex items-center gap-4 px-4 py-3 rounded-2xl text-[14px] font-semibold transition-all group relative ${
                       isActive 
-                        ? 'bg-blue-600 dark:bg-blue-600 text-white shadow-md shadow-blue-500/20' 
-                        : 'text-zinc-600 dark:text-zinc-400 hover:bg-white dark:hover:bg-zinc-900 hover:text-blue-600 dark:hover:text-blue-400 border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800 hover:shadow-sm'
+                        ? 'bg-blue-600 text-white shadow-xl shadow-blue-500/25' 
+                        : 'text-zinc-500 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 hover:text-zinc-900 dark:hover:text-zinc-100'
                     }`}
                   >
                     <item.icon 
-                      size={18} 
-                      strokeWidth={isActive ? 2.5 : 2} 
-                      className={`shrink-0 transition-transform group-hover:scale-110 ${
-                        isActive 
-                          ? "text-white" 
-                          : "text-zinc-400 dark:text-zinc-500 group-hover:text-blue-600 dark:group-hover:text-blue-500"
+                      size={20} 
+                      className={`shrink-0 transition-all ${
+                        isActive ? "text-white scale-110" : "text-zinc-400 group-hover:text-blue-600"
                       }`} 
                     />
-                    <span className="tracking-wide truncate">{item.name}</span>
+                    <span className="tracking-wide">{item.name}</span>
+                    {isActive && (
+                      <div className="absolute right-4 w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                    )}
                   </Link>
                 )
               })}
             </div>
-          )
-        })}
-
-        {searchQuery && navGroups.every(g => g.items.filter(i => i.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0) && (
-          <div className="text-center py-6 px-2">
-            <p className="text-xs text-zinc-400 dark:text-zinc-500 font-medium">No modules found matching "{searchQuery}"</p>
           </div>
-        )}
+        ))}
       </nav>
 
-      {/* 4. Footer / User Settings */}
-      <div className="flex-shrink-0 p-4 border-t border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm">
+      {/* 3. Footer / User Settings */}
+      <div className="flex-shrink-0 p-6 mt-auto">
         
-        {/* Connection Status Badge */}
-        <div className="mb-4 px-3 flex items-center gap-2 min-w-0">
-           <ShieldCheck size={14} className="text-blue-500 shrink-0" />
-           <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 truncate">Secure Node Active</span>
-        </div>
-
-        {/* User Identity Box */}
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 mb-2 flex items-center justify-between group cursor-pointer hover:border-blue-500/30 dark:hover:border-blue-500/40 hover:shadow-sm transition-all min-w-0">
-          <div className="overflow-hidden min-w-0 flex-1">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-0.5 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
-              Identity Operator
-            </p>
-            <p className="text-xs font-semibold text-zinc-900 dark:text-white truncate pr-2">
-              {userEmail || 'Engineer'}
-            </p>
+        {/* User Identity Area */}
+        <div className="relative group mb-6 px-2">
+          <div className="flex items-center justify-between py-2 border-t border-zinc-100 dark:border-zinc-800/50 pt-8">
+            <div className="flex flex-col min-w-0">
+               <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mb-1">Authenticated As</p>
+               <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate pr-4">{userEmail || 'operator'}</h4>
+            </div>
+            <button className="p-2.5 bg-zinc-50 dark:bg-zinc-900 rounded-xl hover:text-blue-600 transition-colors border border-zinc-100 dark:border-zinc-800">
+               <Settings size={18} />
+            </button>
           </div>
-          <Settings size={16} className="text-zinc-400 dark:text-zinc-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors shrink-0 group-hover:rotate-45 duration-300" />
         </div>
 
-        {/* Secure Logout Action */}
-        <form action={logoutAction}>
-          <button 
-            type="submit" 
-            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-[11px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-200 dark:hover:border-zinc-700 border border-transparent transition-all"
-          >
-            <LogOut size={16} /> Disconnect Session
-          </button>
-        </form>
+        {/* Action Buttons */}
+        <div className="space-y-3 px-2">
+          <form action={logoutAction}>
+            <button 
+              type="submit" 
+              className="w-full group flex items-center justify-between px-5 py-3.5 rounded-2xl text-[12px] font-bold uppercase tracking-wider bg-zinc-50 dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 hover:bg-blue-600 hover:text-white transition-all duration-300 border border-zinc-100 dark:border-zinc-800"
+            >
+              <span className="group-hover:translate-x-1 transition-transform">Disconnect Session</span>
+              <LogOut size={16} className="opacity-60" />
+            </button>
+          </form>
+        </div>
 
       </div>
     </div>

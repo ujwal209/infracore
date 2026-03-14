@@ -2,11 +2,12 @@
 
 import * as React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useTheme } from 'next-themes'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { 
-  Cpu, ArrowRight, AlertCircle, Loader2, 
+  ArrowRight, AlertCircle, Loader2, 
   Eye, EyeOff, ShieldCheck, Network, Zap, Fingerprint, Sun, Moon
 } from "lucide-react"
 import { loginAction, loginWithGoogleAction } from '@/app/actions/auth/login'
@@ -64,7 +65,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-zinc-50 dark:bg-zinc-950 font-sans selection:bg-blue-500/30 selection:text-blue-900 dark:selection:text-blue-100 flex flex-col lg:flex-row transition-colors duration-300">
+    <div className="min-h-screen w-full bg-zinc-50 dark:bg-[#0a0a0a] font-sans selection:bg-blue-500/30 selection:text-blue-900 dark:selection:text-blue-100 flex flex-col lg:flex-row transition-colors duration-300">
       
       {/* ================= LEFT PANEL (DESKTOP FIXED) ================= */}
       <div className="hidden lg:flex w-[45%] fixed inset-y-0 left-0 bg-zinc-950 flex-col justify-center p-12 xl:p-16 overflow-hidden z-10 border-r border-zinc-800">
@@ -76,13 +77,16 @@ export default function LoginPage() {
 
         {/* Pinned Top Logo */}
         <div className="absolute top-10 left-10 xl:left-12 z-20">
-          <Link href="/" className="inline-flex items-center gap-3 group hover:opacity-80 transition-opacity">
-            <div className="bg-blue-500/10 p-2.5 rounded-xl group-hover:rotate-12 transition-transform duration-500 shadow-sm border border-blue-500/20">
-              <Cpu size={20} className="text-blue-400" />
+          <Link href="/" className="inline-flex items-center group hover:opacity-80 transition-opacity">
+            <div className="relative w-40 h-12 origin-left">
+              <Image 
+                src="/logo.png" 
+                alt="InferaCore Logo" 
+                fill 
+                className="object-contain object-left dark:invert invert" // Inverted twice on dark to ensure it stays white on the dark panel
+                priority 
+              />
             </div>
-            <span className="font-bold tracking-tight uppercase text-2xl italic text-white">
-              INFRA<span className="text-blue-500">CORE</span>
-            </span>
           </Link>
         </div>
 
@@ -90,16 +94,16 @@ export default function LoginPage() {
         <div className="relative z-10 w-full max-w-md mx-auto">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-md shadow-sm">
             <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
-            <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Network Synchronized</span>
+            <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Platform Active</span>
           </div>
           
           <h1 className="text-4xl xl:text-5xl font-bold text-white tracking-tight uppercase leading-[1.1] mb-6">
-            Command Your <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-200">Architecture</span>
+            Access Your <br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-200">Workspace</span>
           </h1>
           
           <p className="text-zinc-400 text-sm font-medium leading-relaxed mb-10">
-            Access your personalized engineering roadmap, track live market arbitrage, and deploy new skill nodes across 14+ technical domains.
+            Access your personalized engineering roadmap, track live market trends, and build your skills across technical domains.
           </p>
           
           <div className="space-y-4">
@@ -108,8 +112,8 @@ export default function LoginPage() {
                   <Network className="text-blue-400" size={16} />
                 </div>
                 <div>
-                  <h4 className="text-[11px] font-bold text-white uppercase tracking-wider mb-1">Live Domain Mapping</h4>
-                  <p className="text-xs text-zinc-400 font-medium">Real-time market signals across engineering disciplines.</p>
+                  <h4 className="text-[11px] font-bold text-white uppercase tracking-wider mb-1">Live Market Insights</h4>
+                  <p className="text-xs text-zinc-400 font-medium">Real-time job market trends across engineering disciplines.</p>
                 </div>
              </div>
 
@@ -118,8 +122,8 @@ export default function LoginPage() {
                   <Zap className="text-blue-400" size={16} />
                 </div>
                 <div>
-                  <h4 className="text-[11px] font-bold text-white uppercase tracking-wider mb-1">AI-Accelerated Mentorship</h4>
-                  <p className="text-xs text-zinc-400 font-medium">Automated gap analysis to identify missing skills.</p>
+                  <h4 className="text-[11px] font-bold text-white uppercase tracking-wider mb-1">Smart Career Roadmaps</h4>
+                  <p className="text-xs text-zinc-400 font-medium">Personalized paths to identify and learn missing skills.</p>
                 </div>
              </div>
           </div>
@@ -127,7 +131,7 @@ export default function LoginPage() {
 
         {/* Pinned Bottom Footer */}
         <div className="absolute bottom-10 left-10 xl:left-12 right-10 xl:right-12 z-10 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-zinc-500 border-t border-zinc-800 pt-6">
-           <span>© 2026 Infracore System</span>
+           <span>© 2026 INFERACORE</span>
            <span className="flex items-center gap-2">
              <Fingerprint size={12} className="text-blue-500"/> Connection Secure
            </span>
@@ -135,7 +139,7 @@ export default function LoginPage() {
       </div>
 
       {/* ================= RIGHT PANEL (SCROLLABLE CANVAS) ================= */}
-      <div className="w-full lg:w-[55%] lg:ml-[45%] flex flex-col min-h-screen relative bg-zinc-50 dark:bg-zinc-950">
+      <div className="w-full lg:w-[55%] lg:ml-[45%] flex flex-col min-h-screen relative bg-zinc-50 dark:bg-[#0a0a0a]">
         
         {/* Desktop Absolute Theme Toggle */}
         <div className="hidden lg:block absolute top-10 right-10 z-50">
@@ -143,14 +147,17 @@ export default function LoginPage() {
         </div>
 
         {/* MOBILE HEADER (Only visible on small screens) */}
-        <div className="lg:hidden h-20 flex-shrink-0 flex items-center justify-between px-6 bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 z-30 sticky top-0 shadow-sm">
-          <Link href="/" className="inline-flex items-center gap-2 group">
-            <div className="bg-blue-50 dark:bg-blue-500/10 p-2 rounded-xl shadow-sm border border-blue-100 dark:border-blue-500/20">
-              <Cpu size={18} className="text-blue-600 dark:text-blue-500" />
+        <div className="lg:hidden h-20 flex-shrink-0 flex items-center justify-between px-6 bg-white dark:bg-[#0a0a0a] border-b border-zinc-200 dark:border-zinc-800 z-30 sticky top-0 shadow-sm">
+          <Link href="/" className="inline-flex items-center group">
+            <div className="relative w-32 h-10 origin-left">
+              <Image 
+                src="/logo.png" 
+                alt="InferaCore Logo" 
+                fill 
+                className="object-contain object-left dark:invert" 
+                priority 
+              />
             </div>
-            <span className="font-bold tracking-tight uppercase text-xl italic text-zinc-900 dark:text-white">
-              INFRA<span className="text-blue-600 dark:text-blue-500">CORE</span>
-            </span>
           </Link>
           <AuthThemeToggle />
         </div>
@@ -159,15 +166,15 @@ export default function LoginPage() {
         <main className="flex-1 flex flex-col px-4 py-12 sm:px-8 lg:px-12">
           <div className="w-full max-w-[460px] mx-auto my-auto relative animate-in fade-in slide-in-from-bottom-4 duration-700">
             
-            {/* The SaaS Form Card */}
-            <div className="bg-white dark:bg-zinc-900 rounded-[2rem] shadow-sm border border-zinc-200 dark:border-zinc-800 p-8 sm:p-12 relative z-10 w-full">
+            {/* The Form Card */}
+            <div className="bg-white dark:bg-[#111113] rounded-[2rem] shadow-sm border-2 border-zinc-200 dark:border-zinc-800/80 p-8 sm:p-12 relative z-10 w-full">
               
               <div className="mb-8 text-center sm:text-left">
                 <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white mb-3 uppercase">
-                  Authenticate
+                  Welcome Back
                 </h2>
                 <p className="text-zinc-500 dark:text-zinc-400 text-sm font-medium leading-relaxed">
-                  Enter your credentials to securely access your workspace.
+                  Enter your credentials to securely access your account.
                 </p>
               </div>
 
@@ -186,7 +193,7 @@ export default function LoginPage() {
                   onClick={handleGoogleLogin}
                   disabled={loading}
                   variant="outline" 
-                  className="w-full h-14 rounded-2xl border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all shadow-sm flex items-center justify-center bg-white dark:bg-zinc-950"
+                  className="w-full h-14 rounded-2xl border-2 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all shadow-sm flex items-center justify-center bg-white dark:bg-zinc-900"
                 >
                   {loading ? <Loader2 className="animate-spin text-zinc-400" size={20} /> : (
                     <>
@@ -207,27 +214,27 @@ export default function LoginPage() {
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-zinc-200 dark:border-zinc-800" />
                 </div>
-                <div className="relative flex justify-center text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
-                  <span className="bg-white dark:bg-zinc-900 px-4">Or sign in with email</span>
+                <div className="relative flex justify-center text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                  <span className="bg-white dark:bg-[#111113] px-4">Or sign in with email</span>
                 </div>
               </div>
 
               <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="space-y-2">
-                  <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 ml-1">Email Address</label>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 ml-1">Email Address</label>
                   <Input 
                     name="email" 
                     type="email" 
                     required 
-                    className="h-14 px-5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 font-medium text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-900 focus-visible:ring-2 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-500 focus-visible:border-transparent transition-all shadow-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 placeholder:font-normal" 
-                    placeholder="engineer@infracore.io" 
+                    className="h-14 px-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 font-bold text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus-visible:ring-2 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-500 focus-visible:border-transparent transition-all shadow-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 placeholder:font-medium" 
+                    placeholder="user@inferacore.com" 
                   />
                 </div>
                 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between ml-1 pr-1">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Secure Password</label>
-                    <Link href="/auth/forgot-password" className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 hover:underline transition-colors uppercase tracking-wider">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Secure Password</label>
+                    <Link href="/auth/forgot-password" className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline transition-colors uppercase tracking-wider">
                       Forgot?
                     </Link>
                   </div>
@@ -236,7 +243,7 @@ export default function LoginPage() {
                       name="password" 
                       type={showPassword ? "text" : "password"} 
                       required 
-                      className="h-14 pl-5 pr-14 rounded-2xl font-medium bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-900 focus-visible:ring-2 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-500 focus-visible:border-transparent transition-all shadow-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 placeholder:font-normal" 
+                      className="h-14 pl-5 pr-14 rounded-2xl font-bold bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus-visible:ring-2 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-500 focus-visible:border-transparent transition-all shadow-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 placeholder:font-medium" 
                       placeholder="••••••••" 
                     />
                     <button 
@@ -252,20 +259,20 @@ export default function LoginPage() {
                 <Button 
                   type="submit" 
                   disabled={loading} 
-                  className="w-full bg-blue-600 text-white hover:bg-blue-500 font-semibold h-14 rounded-2xl uppercase mt-8 transition-all active:scale-[0.98] shadow-sm flex items-center justify-center gap-2 tracking-wider text-xs border border-transparent"
+                  className="w-full bg-blue-600 text-white hover:bg-blue-500 font-bold h-14 rounded-2xl uppercase mt-8 transition-all active:scale-[0.98] shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 tracking-widest text-[13px] border border-transparent"
                 >
                   {loading ? <Loader2 className="animate-spin" size={20} /> : (
-                    <>Initialize Session <ArrowRight size={16} /></>
+                    <>Sign In <ArrowRight size={18} strokeWidth={2.5} /></>
                   )}
                 </Button>
               </form>
 
               {/* Sign Up Link */}
               <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800 text-center">
-                <p className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center justify-center flex-wrap gap-2">
-                  No active node? 
-                  <Link href="/auth/signup" className="text-zinc-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors border-b border-transparent hover:border-blue-600 pb-0.5">
-                    Deploy Account
+                <p className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center justify-center flex-wrap gap-2">
+                  Don't have an account? 
+                  <Link href="/auth/signup" className="text-zinc-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-0.5">
+                    Sign Up
                   </Link>
                 </p>
               </div>
@@ -274,7 +281,7 @@ export default function LoginPage() {
             {/* Global Security Badge */}
             <div className="mt-8 flex items-center justify-center gap-2 text-zinc-400 dark:text-zinc-500 shrink-0">
                <ShieldCheck size={16} className="text-blue-500" />
-               <span className="text-[10px] font-semibold uppercase tracking-wider">256-bit Encrypted Connection</span>
+               <span className="text-[10px] font-bold uppercase tracking-wider">256-bit Encrypted Connection</span>
             </div>
             
           </div>

@@ -1,79 +1,66 @@
 'use client'
 
 import Link from 'next/link'
-import { Cpu, Home, ChevronLeft, AlertTriangle } from 'lucide-react'
+import { Home, ChevronLeft, AlertCircle } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 font-sans overflow-hidden relative">
+    <div className="min-h-screen bg-zinc-50 dark:bg-[#0a0a0a] flex flex-col items-center justify-center p-6 font-sans overflow-hidden relative transition-colors duration-300">
       
-      {/* Background Visuals */}
-      <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:32px_32px] opacity-20" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-yellow-400/5 rounded-full blur-[120px] pointer-events-none" />
+      {/* Background Subtle Gradient */}
+      <div className="absolute inset-0 bg-[radial-gradient(#e4e4e7_1px,transparent_1px)] dark:bg-[radial-gradient(#18181b_1px,transparent_1px)] [background-size:32px_32px] opacity-40" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-500/10 dark:bg-blue-600/5 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="relative z-10 text-center space-y-8 max-w-2xl">
+      <div className="relative z-10 text-center space-y-10 max-w-xl">
         
-        {/* Animated Icon */}
-        <div className="relative inline-block">
-          <div className="bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-2xl animate-bounce duration-[2000ms]">
-            <Cpu size={48} className="text-yellow-400" />
-          </div>
-          <div className="absolute -top-2 -right-2 bg-red-500 p-2 rounded-full animate-pulse shadow-lg shadow-red-500/50">
-            <AlertTriangle size={16} className="text-white" />
+        {/* Warning Icon Container */}
+        <div className="flex justify-center">
+          <div className="bg-white dark:bg-zinc-900 p-6 rounded-[2.5rem] border-2 border-zinc-200 dark:border-zinc-800 shadow-xl">
+            <AlertCircle size={48} className="text-blue-600 dark:text-blue-500" strokeWidth={2} />
           </div>
         </div>
 
-        {/* Error Text */}
+        {/* Essential Error Content */}
         <div className="space-y-4">
-          <h1 className="text-8xl sm:text-9xl font-black text-white tracking-tighter opacity-10 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[120%] select-none">
+          <h1 className="text-9xl font-black text-zinc-200 dark:text-zinc-800/40 tracking-tighter leading-none select-none">
             404
           </h1>
-          <h2 className="text-3xl sm:text-4xl font-black text-white uppercase tracking-tight">
-            Node Not <span className="text-yellow-400">Found</span>
+          <h2 className="text-3xl sm:text-4xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">
+            Page Not <span className="text-blue-600 dark:text-blue-500">Found</span>
           </h2>
-          <p className="text-slate-400 text-sm sm:text-base font-medium leading-relaxed max-w-md mx-auto">
-            The coordinates you requested do not exist within the Infracore Nexus. This sector might have been decommissioned or the uplink is severed.
+          <p className="text-zinc-500 dark:text-zinc-400 text-sm font-bold uppercase tracking-widest leading-relaxed">
+            The link you followed may be broken, or the page may have been removed.
           </p>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+        {/* Direct Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
           <Button 
             asChild
             variant="outline"
-            className="w-full sm:w-auto h-14 px-8 rounded-2xl border-slate-700 bg-slate-800/50 text-white hover:bg-slate-800 hover:text-yellow-400 transition-all font-bold uppercase tracking-widest text-[11px]"
+            className="w-full sm:w-auto h-14 px-10 rounded-2xl border-2 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all font-black uppercase tracking-widest text-[11px]"
           >
             <Link href="/" className="flex items-center gap-2">
-              <ChevronLeft size={16} /> Return to Nexus
+              <ChevronLeft size={18} strokeWidth={3} /> Go Back
             </Link>
           </Button>
 
           <Button 
             asChild
-            className="w-full sm:w-auto h-14 px-8 rounded-2xl bg-yellow-400 text-slate-900 hover:bg-yellow-500 transition-all font-black uppercase tracking-widest text-[11px] shadow-lg shadow-yellow-400/10"
+            className="w-full sm:w-auto h-14 px-10 rounded-2xl bg-blue-600 text-white hover:bg-blue-500 transition-all font-black uppercase tracking-widest text-[11px] shadow-xl shadow-blue-500/20 active:scale-95"
           >
-            <Link href="/auth/login" className="flex items-center gap-2">
-              <Home size={16} /> Access Terminal
+            <Link href="/dashboard" className="flex items-center gap-2">
+              <Home size={18} strokeWidth={3} /> Home
             </Link>
           </Button>
         </div>
-
-        {/* Technical Metadata */}
-        <div className="pt-12">
-          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10">
-            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-            <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-[0.2em]">
-              Error Code: INFRA_NULL_POINTER
-            </span>
-          </div>
-        </div>
       </div>
 
-      {/* Footer Branding */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 opacity-20">
-         <span className="font-black tracking-tighter uppercase text-xl italic text-white">
-            INFRA<span className="text-yellow-500">CORE</span>
+      {/* Brand Footer */}
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 opacity-40">
+         <span className="font-black tracking-tighter uppercase text-2xl italic text-zinc-900 dark:text-white">
+           INFERA<span className="text-blue-600 dark:text-blue-500">CORE</span>
          </span>
       </div>
     </div>

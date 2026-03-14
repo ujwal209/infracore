@@ -1,47 +1,108 @@
 'use client'
 
-import React from 'react'
-import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { ChevronDown, Filter } from 'lucide-react'
+import * as React from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Check, ChevronsUpDown, Search, Briefcase } from 'lucide-react'
 
-const DOMAINS = [
+const ENGINEERING_DOMAINS = [
   "Software Engineering",
-  "AI & Machine Learning",
-  "Cloud & DevOps",
+  "Computer Science",
+  "Artificial Intelligence",
   "Data Science",
-  "Cybersecurity",
-  "Electronics & VLSI",
+  "Machine Learning",
+  "Electronics and Communication",
+  "Electrical Engineering",
   "Mechanical Engineering",
   "Civil Engineering",
-  "Electrical Engineering"
+  "Aerospace Engineering",
+  "Information Technology",
+  "Cyber Security",
+  "Robotics and Automation",
+  "Biotechnology",
+  "Chemical Engineering"
 ]
 
 export function DomainSelector({ currentDomain }: { currentDomain: string }) {
   const router = useRouter()
-  const pathname = usePathname()
   const searchParams = useSearchParams()
+  const [open, setOpen] = React.useState(false)
+  const [search, setSearch] = React.useState('')
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const filteredDomains = ENGINEERING_DOMAINS.filter(domain =>
+    domain.toLowerCase().includes(search.toLowerCase())
+  )
+
+  const handleSelect = (domain: string) => {
     const params = new URLSearchParams(searchParams.toString())
-    params.set('domain', e.target.value)
-    // Pushing the new URL triggers the Server Component to refetch data
-    router.push(pathname + '?' + params.toString())
+    params.set('domain', domain)
+    router.push(`/dashboard?${params.toString()}`)
+    setOpen(false)
+    setSearch('')
   }
 
   return (
-    <div className="relative inline-flex items-center group">
-      <div className="absolute left-3 text-slate-400 pointer-events-none group-hover:text-slate-600 transition-colors">
-        <Filter size={14} />
-      </div>
-      <select 
-        value={currentDomain}
-        onChange={handleChange}
-        className="appearance-none bg-slate-50 border border-slate-200 text-slate-700 font-bold text-[11px] uppercase tracking-widest rounded-xl pl-9 pr-10 py-2.5 outline-none focus:border-slate-400 hover:bg-slate-100 transition-all cursor-pointer shadow-sm"
+    <div className="relative w-full md:w-[340px]">
+      {/* TRIGGER BUTTON */}
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-5 py-3.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl hover:border-blue-500 dark:hover:border-blue-500 transition-all shadow-sm focus:ring-4 focus:ring-blue-500/10"
       >
-        {!DOMAINS.includes(currentDomain) && <option value={currentDomain}>{currentDomain}</option>}
-        {DOMAINS.map(d => <option key={d} value={d}>{d}</option>)}
-      </select>
-      <ChevronDown size={14} className="absolute right-3 text-slate-400 pointer-events-none" />
+        <div className="flex items-center gap-3 overflow-hidden">
+          <div className="p-2 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg shrink-0">
+            <Briefcase size={16} strokeWidth={2.5} />
+          </div>
+          <div className="flex flex-col items-start truncate">
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-0.5">Market Domain</span>
+            <span className="text-[15px] font-bold text-zinc-900 dark:text-white truncate">
+              {currentDomain}
+            </span>
+          </div>
+        </div>
+        <ChevronsUpDown size={18} className="text-zinc-400 shrink-0 ml-2" />
+      </button>
+
+      {/* DROPDOWN MENU */}
+      {open && (
+        <div className="absolute top-full right-0 mt-3 w-full md:w-[380px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+          
+          {/* SEARCH INPUT */}
+          <div className="flex items-center px-4 py-3.5 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50">
+            <Search size={18} className="text-zinc-400 mr-3 shrink-0" />
+            <input 
+              autoFocus
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search engineering domains..."
+              className="w-full bg-transparent outline-none text-[15px] font-semibold text-zinc-900 dark:text-white placeholder:text-zinc-400"
+            />
+          </div>
+
+          {/* LIST */}
+          <div className="max-h-[320px] overflow-y-auto p-2 custom-scrollbar">
+            {filteredDomains.length === 0 ? (
+              <p className="p-6 text-center text-sm font-semibold text-zinc-500">No domains found.</p>
+            ) : (
+              filteredDomains.map((domain) => (
+                <button
+                  key={domain}
+                  onClick={() => handleSelect(domain)}
+                  className={`w-full flex items-center justify-between px-4 py-3.5 text-[15px] font-semibold rounded-xl transition-colors ${
+                    currentDomain === domain 
+                      ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400' 
+                      : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  }`}
+                >
+                  <span className="truncate">{domain}</span>
+                  {currentDomain === domain && <Check size={18} strokeWidth={3} className="shrink-0" />}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* BACKDROP TO CLOSE */}
+      {open && <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />}
     </div>
   )
 }

@@ -2,13 +2,14 @@
 
 import * as React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { 
-  Cpu, Loader2, Eye, EyeOff, ShieldCheck, 
-  Target, Layers, Zap, ChevronRight, Menu, X, Fingerprint, Lock, AlertCircle, Sun, Moon
+  Loader2, Eye, EyeOff, ShieldCheck, 
+  Target, Layers, ChevronRight, Menu, X, Fingerprint, AlertCircle, Sun, Moon
 } from "lucide-react"
 import { initiateSignup, verifySignupOtp } from '@/app/actions/auth/signup'
 import { loginWithGoogleAction } from '@/app/actions/auth/login'
@@ -58,7 +59,7 @@ export default function SignupPage() {
     const confirmPassword = formData.get('confirmPassword') as string
 
     if (password !== confirmPassword) {
-      setError("Security breach: Passwords do not match.")
+      setError("Passwords do not match.")
       setLoading(false)
       return
     }
@@ -104,7 +105,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-zinc-50 dark:bg-zinc-950 font-sans selection:bg-blue-500/30 selection:text-blue-900 dark:selection:text-blue-100 flex flex-col lg:flex-row transition-colors duration-300">
+    <div className="min-h-screen w-full bg-zinc-50 dark:bg-[#0a0a0a] font-sans selection:bg-blue-500/30 selection:text-blue-900 dark:selection:text-blue-100 flex flex-col lg:flex-row transition-colors duration-300">
       
       {/* ================= LEFT PANEL (DESKTOP FIXED) ================= */}
       <div className="hidden lg:flex w-[45%] fixed inset-y-0 left-0 bg-zinc-950 flex-col justify-center p-12 xl:p-16 overflow-hidden z-10 border-r border-zinc-800">
@@ -116,13 +117,16 @@ export default function SignupPage() {
 
         {/* Pinned Top Logo */}
         <div className="absolute top-10 left-10 xl:left-12 z-20">
-          <Link href="/" className="inline-flex items-center gap-3 group hover:opacity-80 transition-opacity">
-            <div className="bg-blue-500/10 p-2.5 rounded-xl group-hover:rotate-12 transition-transform duration-500 shadow-sm border border-blue-500/20">
-              <Cpu size={20} className="text-blue-400" />
+          <Link href="/" className="inline-flex items-center group hover:opacity-80 transition-opacity">
+            <div className="relative w-40 h-12 origin-left">
+              <Image 
+                src="/logo.png" 
+                alt="InferaCore Logo" 
+                fill 
+                className="object-contain object-left dark:invert invert" // Inverted twice to ensure it stays white on the dark panel
+                priority 
+              />
             </div>
-            <span className="font-bold tracking-tight uppercase text-2xl italic text-white">
-              INFRA<span className="text-blue-500">CORE</span>
-            </span>
           </Link>
         </div>
 
@@ -130,16 +134,16 @@ export default function SignupPage() {
         <div className="relative z-10 w-full max-w-md mx-auto">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-md shadow-sm">
             <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
-            <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Global Intelligence Protocol</span>
+            <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Platform Active</span>
           </div>
           
           <h1 className="text-4xl xl:text-5xl font-bold text-white tracking-tight uppercase leading-[1.1] mb-6">
-            Build Your <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-200">Future Node</span>
+            Launch Your <br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-200">Career</span>
           </h1>
           
           <p className="text-zinc-400 text-sm font-medium leading-relaxed mb-10">
-            Join the most advanced engineering intelligence network. Stop guessing what the market wants, and start building what commands a premium.
+            Join the premier engineering career platform. Stop guessing what the market wants, and start building the skills that land your dream job.
           </p>
           
           <div className="space-y-4">
@@ -148,8 +152,8 @@ export default function SignupPage() {
                   <Layers className="text-blue-400" size={16} />
                 </div>
                 <div>
-                  <h4 className="text-[11px] font-bold text-white uppercase tracking-wider mb-1">Cross-Domain Context</h4>
-                  <p className="text-xs text-zinc-400 font-medium">Real-time market signals across engineering disciplines.</p>
+                  <h4 className="text-[11px] font-bold text-white uppercase tracking-wider mb-1">Live Market Insights</h4>
+                  <p className="text-xs text-zinc-400 font-medium">Real-time job market trends across engineering disciplines.</p>
                 </div>
              </div>
 
@@ -158,7 +162,7 @@ export default function SignupPage() {
                   <Target className="text-blue-400" size={16} />
                 </div>
                 <div>
-                  <h4 className="text-[11px] font-bold text-white uppercase tracking-wider mb-1">Automated Gap Analysis</h4>
+                  <h4 className="text-[11px] font-bold text-white uppercase tracking-wider mb-1">Smart Career Roadmaps</h4>
                   <p className="text-xs text-zinc-400 font-medium">AI identifies missing skills between you and your target role.</p>
                 </div>
              </div>
@@ -167,15 +171,15 @@ export default function SignupPage() {
 
         {/* Pinned Bottom Footer */}
         <div className="absolute bottom-10 left-10 xl:left-12 right-10 xl:right-12 z-10 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-zinc-500 border-t border-zinc-800 pt-6">
-           <span>© 2026 Infracore System</span>
+           <span>© 2026 INFERACORE</span>
            <span className="flex items-center gap-2">
-             <Fingerprint size={12} className="text-blue-500"/> Vault Active
+             <Fingerprint size={12} className="text-blue-500"/> Connection Secure
            </span>
         </div>
       </div>
 
       {/* ================= RIGHT PANEL (SCROLLABLE CANVAS) ================= */}
-      <div className="w-full lg:w-[55%] lg:ml-[45%] flex flex-col min-h-screen relative bg-zinc-50 dark:bg-zinc-950">
+      <div className="w-full lg:w-[55%] lg:ml-[45%] flex flex-col min-h-screen relative bg-zinc-50 dark:bg-[#0a0a0a]">
         
         {/* Desktop Absolute Theme Toggle */}
         <div className="hidden lg:block absolute top-10 right-10 z-50">
@@ -183,14 +187,17 @@ export default function SignupPage() {
         </div>
 
         {/* MOBILE HEADER (Only visible on small screens) */}
-        <div className="lg:hidden h-20 flex-shrink-0 flex items-center justify-between px-6 bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 z-30 sticky top-0 shadow-sm">
-          <Link href="/" className="inline-flex items-center gap-2 group">
-            <div className="bg-blue-50 dark:bg-blue-500/10 p-2 rounded-xl shadow-sm border border-blue-100 dark:border-blue-500/20">
-              <Cpu size={18} className="text-blue-600 dark:text-blue-500" />
+        <div className="lg:hidden h-20 flex-shrink-0 flex items-center justify-between px-6 bg-white dark:bg-[#0a0a0a] border-b border-zinc-200 dark:border-zinc-800 z-30 sticky top-0 shadow-sm">
+          <Link href="/" className="inline-flex items-center group">
+            <div className="relative w-32 h-10 origin-left">
+              <Image 
+                src="/logo.png" 
+                alt="InferaCore Logo" 
+                fill 
+                className="object-contain object-left dark:invert" 
+                priority 
+              />
             </div>
-            <span className="font-bold tracking-tight uppercase text-xl italic text-zinc-900 dark:text-white">
-              INFRA<span className="text-blue-600 dark:text-blue-500">CORE</span>
-            </span>
           </Link>
           <AuthThemeToggle />
         </div>
@@ -199,15 +206,15 @@ export default function SignupPage() {
         <main className="flex-1 flex flex-col px-4 py-12 sm:px-8 lg:px-12">
           <div className="w-full max-w-[460px] mx-auto my-auto relative animate-in fade-in slide-in-from-bottom-4 duration-700">
             
-            {/* The SaaS Form Card */}
-            <div className="bg-white dark:bg-zinc-900 rounded-[2rem] shadow-sm border border-zinc-200 dark:border-zinc-800 p-8 sm:p-12 relative z-10 w-full">
+            {/* The Form Card */}
+            <div className="bg-white dark:bg-[#111113] rounded-[2rem] shadow-sm border-2 border-zinc-200 dark:border-zinc-800/80 p-8 sm:p-12 relative z-10 w-full">
               
               <div className="mb-10 text-center sm:text-left">
                 <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white mb-3 uppercase">
-                  {step === 'form' ? 'Deploy Node' : 'Verify Identity'}
+                  {step === 'form' ? 'Create Account' : 'Verify Email'}
                 </h2>
                 <p className="text-zinc-500 dark:text-zinc-400 text-sm font-medium leading-relaxed">
-                  {step === 'form' ? 'Create your engineering intelligence profile.' : 'Enter the 8-digit authorization code.'}
+                  {step === 'form' ? 'Set up your engineering profile.' : 'Enter the 8-digit verification code.'}
                 </p>
               </div>
 
@@ -228,7 +235,7 @@ export default function SignupPage() {
                       onClick={handleGoogleSignup}
                       disabled={loading}
                       variant="outline" 
-                      className="w-full h-14 rounded-2xl border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all shadow-sm flex items-center justify-center bg-white dark:bg-zinc-950"
+                      className="w-full h-14 rounded-2xl border-2 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all shadow-sm flex items-center justify-center bg-white dark:bg-zinc-900"
                     >
                       {loading ? <Loader2 className="animate-spin text-zinc-400" size={20} /> : (
                         <>
@@ -249,41 +256,41 @@ export default function SignupPage() {
                     <div className="absolute inset-0 flex items-center">
                       <div className="w-full border-t border-zinc-200 dark:border-zinc-800" />
                     </div>
-                    <div className="relative flex justify-center text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
-                      <span className="bg-white dark:bg-zinc-900 px-4">Or continue with email</span>
+                    <div className="relative flex justify-center text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                      <span className="bg-white dark:bg-[#111113] px-4">Or sign up with email</span>
                     </div>
                   </div>
 
                   <form className="space-y-6" onSubmit={handleSignupSubmit}>
                     <div className="space-y-2">
-                      <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 ml-1">Commander Name</label>
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 ml-1">Full Name</label>
                       <Input 
                         name="name" 
                         required 
-                        className="h-14 px-5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 font-medium text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-900 focus-visible:ring-2 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-500 focus-visible:border-transparent transition-all shadow-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 placeholder:font-normal" 
+                        className="h-14 px-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 font-bold text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus-visible:ring-2 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-500 focus-visible:border-transparent transition-all shadow-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 placeholder:font-medium" 
                         placeholder="John Doe" 
                       />
                     </div>
                     
                     <div className="space-y-2">
-                      <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 ml-1">Email Address</label>
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 ml-1">Email Address</label>
                       <Input 
                         name="email" 
                         type="email" 
                         required 
-                        className="h-14 px-5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 font-medium text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-900 focus-visible:ring-2 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-500 focus-visible:border-transparent transition-all shadow-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 placeholder:font-normal" 
-                        placeholder="engineer@infracore.io" 
+                        className="h-14 px-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 font-bold text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus-visible:ring-2 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-500 focus-visible:border-transparent transition-all shadow-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 placeholder:font-medium" 
+                        placeholder="user@inferacore.com" 
                       />
                     </div>
                     
                     <div className="space-y-2">
-                      <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 ml-1">Secure Password</label>
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 ml-1">Password</label>
                       <div className="relative">
                         <Input 
                           name="password" 
                           type={showPassword ? "text" : "password"} 
                           required 
-                          className="h-14 pl-5 pr-14 rounded-2xl font-medium bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-900 focus-visible:ring-2 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-500 focus-visible:border-transparent transition-all shadow-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 placeholder:font-normal" 
+                          className="h-14 pl-5 pr-14 rounded-2xl font-bold bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus-visible:ring-2 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-500 focus-visible:border-transparent transition-all shadow-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 placeholder:font-medium" 
                           placeholder="••••••••" 
                         />
                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors p-1">
@@ -293,13 +300,13 @@ export default function SignupPage() {
                     </div>
                     
                     <div className="space-y-2">
-                      <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 ml-1">Verify Password</label>
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 ml-1">Confirm Password</label>
                       <div className="relative">
                         <Input 
                           name="confirmPassword" 
                           type={showConfirmPassword ? "text" : "password"} 
                           required 
-                          className="h-14 pl-5 pr-14 rounded-2xl font-medium bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-900 focus-visible:ring-2 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-500 focus-visible:border-transparent transition-all shadow-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 placeholder:font-normal" 
+                          className="h-14 pl-5 pr-14 rounded-2xl font-bold bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus-visible:ring-2 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-500 focus-visible:border-transparent transition-all shadow-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 placeholder:font-medium" 
                           placeholder="••••••••" 
                         />
                         <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors p-1">
@@ -311,10 +318,10 @@ export default function SignupPage() {
                     <Button 
                       type="submit" 
                       disabled={loading} 
-                      className="w-full bg-blue-600 text-white hover:bg-blue-500 font-semibold h-14 rounded-2xl uppercase mt-8 transition-all active:scale-[0.98] shadow-sm flex items-center justify-center gap-2 tracking-wider text-xs border border-transparent"
+                      className="w-full bg-blue-600 text-white hover:bg-blue-500 font-bold h-14 rounded-2xl uppercase mt-8 transition-all active:scale-[0.98] shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 tracking-widest text-[13px] border border-transparent"
                     >
                       {loading ? <Loader2 className="animate-spin" size={20} /> : (
-                        <>Deploy Account <ChevronRight size={18} /></>
+                        <>Create Account <ChevronRight size={18} strokeWidth={2.5} /></>
                       )}
                     </Button>
                   </form>
@@ -327,10 +334,10 @@ export default function SignupPage() {
                       onChange={(e) => setOtp(e.target.value)}
                       maxLength={8}
                       required
-                      className="h-24 text-center text-3xl sm:text-4xl font-mono font-bold tracking-[0.4em] pl-[0.4em] rounded-3xl bg-zinc-50 dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 focus:bg-white dark:focus:bg-zinc-900 focus-visible:ring-0 focus-visible:border-blue-600 dark:focus-visible:border-blue-500 transition-all uppercase shadow-inner text-zinc-900 dark:text-white" 
+                      className="h-24 text-center text-3xl sm:text-4xl font-mono font-bold tracking-[0.4em] pl-[0.4em] rounded-3xl bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 focus:bg-white dark:focus:bg-zinc-800 focus-visible:ring-2 focus-visible:ring-blue-600 dark:focus-visible:border-blue-500 transition-all uppercase shadow-inner text-zinc-900 dark:text-white" 
                       placeholder="--------" 
                     />
-                    <p className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mt-4 flex items-center justify-center gap-1.5 flex-wrap">
+                    <p className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mt-4 flex items-center justify-center gap-1.5 flex-wrap">
                       <span>Sent to</span>
                       <span className="text-zinc-900 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-md">{emailCache}</span>
                     </p>
@@ -339,7 +346,7 @@ export default function SignupPage() {
                   <Button 
                     type="submit" 
                     disabled={loading || otp.length < 8} 
-                    className="w-full bg-blue-600 text-white hover:bg-blue-500 font-semibold h-14 rounded-2xl uppercase mt-4 transition-all active:scale-[0.98] shadow-sm tracking-wider text-xs border border-transparent"
+                    className="w-full bg-blue-600 text-white hover:bg-blue-500 font-bold h-14 rounded-2xl uppercase mt-4 transition-all active:scale-[0.98] shadow-md tracking-widest text-[13px] border border-transparent"
                   >
                     {loading ? <Loader2 className="animate-spin" size={20} /> : "Verify Code"}
                   </Button>
@@ -350,9 +357,9 @@ export default function SignupPage() {
                       setStep('form')
                       setError(null)
                     }}
-                    className="w-full text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white uppercase tracking-wider transition-colors mt-6 pt-4 border-t border-zinc-100 dark:border-zinc-800"
+                    className="w-full text-[11px] font-bold text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white uppercase tracking-widest transition-colors mt-6 pt-4 border-t border-zinc-100 dark:border-zinc-800"
                   >
-                    Incorrect Email? Abort Process
+                    Incorrect Email? Go Back
                   </button>
                 </form>
               )}
@@ -360,10 +367,10 @@ export default function SignupPage() {
               {/* Login Link below form inside card */}
               {step === 'form' && (
                 <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800 text-center">
-                  <p className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center justify-center flex-wrap gap-2">
-                    Already Authenticated? 
-                    <Link href="/auth/login" className="text-zinc-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors border-b border-transparent hover:border-blue-600 pb-0.5">
-                      Access Terminal
+                  <p className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center justify-center flex-wrap gap-2">
+                    Already have an account? 
+                    <Link href="/auth/login" className="text-zinc-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-0.5">
+                      Sign In
                     </Link>
                   </p>
                 </div>
@@ -373,7 +380,7 @@ export default function SignupPage() {
             {/* Global Security Badge perfectly spaced below card */}
             <div className="mt-8 flex items-center justify-center gap-2 text-zinc-400 dark:text-zinc-500 shrink-0">
                <ShieldCheck size={16} className="text-blue-500" />
-               <span className="text-[10px] font-semibold uppercase tracking-wider">End-to-End Encryption Active</span>
+               <span className="text-[10px] font-bold uppercase tracking-wider">End-to-End Encryption Active</span>
             </div>
             
           </div>
