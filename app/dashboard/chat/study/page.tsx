@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
@@ -10,13 +10,12 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import Image from 'next/image'
 import { 
-  Search, Menu, X, RefreshCw, Sparkles, Plus, Send, Edit3, 
-  Trash2, Loader2, Check, ChevronRight, Copy, PenLine, 
-  CheckCircle2, Globe, Zap, Square, Maximize2, Download, 
-  GraduationCap, ArrowRight
+  Search, Menu, X, RefreshCw, Plus, Send, Edit3, 
+  Trash2, Loader2, Check, PenLine, Globe, Zap, Square, 
+  GraduationCap, ArrowRight, BrainCircuit, Target,
+  BookOpen, CheckCircle2, Sparkles, Copy, Maximize2, Download,BarChart 
 } from 'lucide-react'
 
-// --- Server Actions (Ensure these point to your actual action file) ---
 import { 
   getStudySessions, 
   getStudyMessages, 
@@ -24,10 +23,235 @@ import {
   renameStudySession,
   sendStudyMessage 
 } from '@/app/actions/study'
+import { createClient } from '@/utils/supabase/client'
+
+const supabase = createClient()
 
 // ==========================================
-// 1. UTILITY COMPONENTS
+// 1. WIDGETS & UTILS
 // ==========================================
+
+export const QuizWidget = ({ topic, questions, question, options, correctIndex, explanation, onAnswerSubmitted, sessionId, isHistorical }: any) => {
+  const quizList = questions || [{ question, options, correctIndex, explanation }]
+  
+  const [selectedMap, setSelectedMap] = useState<Record<number, number>>(
+    isHistorical ? quizList.reduce((acc: any, _: any, i: number) => ({...acc, [i]: quizList[i].correctIndex}), {}) : {}
+  )
+  const [submitted, setSubmitted] = useState(isHistorical || false)
+  const [saving, setSaving] = useState(false)
+
+  const isAllAnswered = Object.keys(selectedMap).length === quizList.length
+
+  const handleSubmit = async () => {
+    if (!isAllAnswered || submitted || isHistorical) return
+    setSubmitted(true)
+    setSaving(true)
+    
+    let score = 0
+    quizList.forEach((q: any, i: number) => {
+      if (selectedMap[i] === q.correctIndex) score++
+    })
+
+    if (sessionId) {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await supabase.from('study_quiz_results').insert({
+          session_id: sessionId,
+          user_id: user.id,
+          topic: topic || 'General Concept',
+          question: `Exam: ${quizList.length} Questions`,
+          is_correct: score === quizList.length
+        })
+      }
+    }
+    setSaving(false)
+
+    const feedbackMsg = `I submitted the assessment and scored ${score} out of ${quizList.length}. Let's continue.`
+    if (onAnswerSubmitted) onAnswerSubmitted(feedbackMsg)
+  }
+
+  return (
+    <div className="my-6 rounded-[1.5rem] bg-white dark:bg-[#0c0c0e] border border-blue-200/60 dark:border-blue-900/50 shadow-xl shadow-blue-500/5 w-full max-w-full sm:max-w-3xl font-outfit overflow-hidden flex flex-col">
+      <div className="bg-zinc-50 dark:bg-[#111113] border-b border-zinc-100 dark:border-zinc-800/80 px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-10 min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-800 flex items-center justify-center shadow-sm shrink-0">
+            <BookOpen size={16} className="text-blue-600 dark:text-blue-400" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="font-google-sans text-[11px] sm:text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-0.5 truncate">
+              {quizList.length > 1 ? 'Comprehensive Assessment' : 'Knowledge Check'}
+            </h3>
+            <p className="text-[13px] font-semibold text-blue-600 dark:text-blue-400 truncate max-w-[150px] sm:max-w-xs">{topic}</p>
+          </div>
+        </div>
+        {isHistorical && (
+          <span className="px-2.5 py-1.5 bg-zinc-200/50 dark:bg-zinc-800/50 text-zinc-500 dark:text-zinc-400 text-[10px] font-bold uppercase tracking-widest rounded-lg flex items-center gap-1.5 shrink-0 ml-2">
+            <CheckCircle2 size={13} /> <span className="hidden sm:inline">Completed</span>
+          </span>
+        )}
+      </div>
+      
+      <div className="p-4 sm:p-6 space-y-8 sm:space-y-10">
+        {quizList.map((q: any, qIndex: number) => (
+          <div key={qIndex} className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${qIndex * 100}ms` }}>
+            <div className="flex gap-3 mb-4 min-w-0">
+              {quizList.length > 1 && (
+                <span className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold text-[13px] shrink-0">
+                  {qIndex + 1}
+                </span>
+              )}
+              <div className="text-[15px] sm:text-[16px] font-bold text-zinc-900 dark:text-white leading-relaxed pt-0.5 prose prose-zinc dark:prose-invert max-w-none prose-p:my-0 prose-headings:my-0 w-full overflow-x-auto break-words custom-scrollbar">
+                <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[[rehypeKatex, { strict: false }]]}>
+                  {q.question}
+                </ReactMarkdown>
+              </div>
+            </div>
+
+            <div className="space-y-2.5 ml-0 sm:ml-10">
+              {q.options.map((opt: string, i: number) => {
+                let stateClass = "border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/30 text-zinc-700 dark:text-zinc-300"
+                let badgeClass = "bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
+                
+                if (submitted) {
+                  if (i === q.correctIndex) {
+                    stateClass = "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-300 font-bold ring-2 ring-emerald-500/20 shadow-sm"
+                    badgeClass = "bg-emerald-500 text-white shadow-sm"
+                  } else if (i === selectedMap[qIndex]) {
+                    stateClass = "border-red-500 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 shadow-sm"
+                    badgeClass = "bg-red-500 text-white shadow-sm"
+                  } else {
+                    stateClass = "border-zinc-200 dark:border-zinc-800 opacity-40"
+                  }
+                } else {
+                  if (selectedMap[qIndex] === i) {
+                    stateClass = "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 ring-2 ring-blue-500/20 shadow-sm"
+                    badgeClass = "bg-blue-500 text-white shadow-sm"
+                  } else {
+                    stateClass += " hover:border-blue-300 dark:hover:border-blue-700 hover:bg-white dark:hover:bg-zinc-900 hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
+                  }
+                }
+
+                return (
+                  <button
+                    key={i}
+                    disabled={submitted}
+                    onClick={() => setSelectedMap(prev => ({...prev, [qIndex]: i}))}
+                    className={`w-full text-left p-3 sm:p-4 rounded-xl border-2 transition-all duration-300 flex items-center gap-3 sm:gap-4 ${stateClass} min-w-0`}
+                  >
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold font-mono text-[12px] sm:text-[13px] shrink-0 transition-colors ${badgeClass}`}>
+                      {String.fromCharCode(65 + i)}
+                    </div>
+                    <div className="text-[13.5px] sm:text-[14.5px] leading-snug prose prose-zinc dark:prose-invert max-w-none prose-p:my-0 w-full overflow-x-auto break-words custom-scrollbar">
+                      <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[[rehypeKatex, { strict: false }]]}>
+                        {opt}
+                      </ReactMarkdown>
+                    </div>
+                    {submitted && i === q.correctIndex && <CheckCircle2 size={16} className="text-emerald-500 ml-auto shrink-0 hidden sm:block" />}
+                    {submitted && i === selectedMap[qIndex] && i !== q.correctIndex && <X size={16} className="text-red-500 ml-auto shrink-0 hidden sm:block" />}
+                  </button>
+                )
+              })}
+            </div>
+
+            {submitted && (
+              <div className="mt-4 ml-0 sm:ml-10 p-4 sm:p-5 rounded-xl bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 text-[13.5px] sm:text-[14px] text-zinc-700 dark:text-zinc-300 leading-relaxed animate-in fade-in slide-in-from-bottom-2 duration-500 flex items-start gap-3 min-w-0">
+                <Sparkles size={16} className="text-blue-500 shrink-0 mt-0.5" />
+                <div className="prose prose-zinc dark:prose-invert max-w-none w-full overflow-x-auto break-words custom-scrollbar">
+                  <span className="font-bold text-zinc-900 dark:text-white mr-2">Explanation:</span>
+                  <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[[rehypeKatex, { strict: false }]]}>
+                    {q.explanation}
+                  </ReactMarkdown>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+
+        {!isHistorical && (
+          <div className="pt-5 border-t border-zinc-100 dark:border-zinc-800/80 mt-6">
+            <button 
+              onClick={handleSubmit} 
+              disabled={!isAllAnswered || submitted || saving}
+              className="w-full h-12 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[14.5px] sm:text-[15px] rounded-xl transition-all disabled:opacity-50 disabled:hover:bg-blue-600 flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 active:scale-[0.98]"
+            >
+              {saving ? <Loader2 className="animate-spin" size={18} /> : submitted ? <><Check size={18} /> Assessment Recorded</> : 'Submit Assessment'}
+            </button>
+            {!isAllAnswered && !submitted && (
+              <p className="text-center text-zinc-400 text-[12px] font-medium mt-3">
+                Answer all {quizList.length} questions to submit
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export const ProgressWidget = ({ topic, masteryPercentage, completedConcepts, nextConcept }: any) => {
+  const radius = 60;
+  const arc = Math.PI * radius; 
+  const percentage = Math.max(0, Math.min(100, masteryPercentage || 0));
+  const offset = arc - (percentage / 100) * arc;
+
+  return (
+    <div className="my-6 p-5 sm:p-6 rounded-[1.5rem] bg-gradient-to-br from-blue-500/5 to-indigo-500/5 border border-blue-200/50 dark:border-blue-900/50 w-full max-w-full sm:max-w-xl font-outfit shadow-xl shadow-blue-500/5 overflow-hidden">
+      <div className="flex items-center justify-between mb-6 sm:mb-8">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
+            <BarChart size={18} className="text-white" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-google-sans text-[10px] sm:text-[11px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-widest mb-0.5">Live Tracker</h3>
+            <p className="text-base sm:text-lg font-bold text-zinc-900 dark:text-white leading-tight truncate w-full">{topic}</p>
+          </div>
+        </div>
+      </div>
+      
+      <div className="relative flex justify-center items-end h-[70px] sm:h-[80px] mb-6 sm:mb-8">
+        <svg className="w-[140px] h-[70px] sm:w-[160px] sm:h-[80px] drop-shadow-md" viewBox="0 0 160 80">
+          <path d="M 10 70 A 70 70 0 0 1 150 70" fill="none" stroke="currentColor" strokeWidth="12" strokeLinecap="round" className="text-zinc-200 dark:text-zinc-800" />
+          <path d="M 10 70 A 70 70 0 0 1 150 70" fill="none" stroke="url(#progress-gradient)" strokeWidth="12" strokeLinecap="round" strokeDasharray={Math.PI * 70} strokeDashoffset={(Math.PI * 70) - (percentage / 100) * (Math.PI * 70)} className="transition-all duration-1000 ease-out" />
+          <defs>
+            <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#6366f1" /> 
+            </linearGradient>
+          </defs>
+        </svg>
+        <div className="absolute bottom-0 flex flex-col items-center">
+          <span className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 leading-none">
+            {percentage}%
+          </span>
+          <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-[0.2em] mt-1">Mastery</span>
+        </div>
+      </div>
+
+      <div className="space-y-4 sm:space-y-5">
+        <div>
+          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2">Mastered Concepts</p>
+          <div className="flex flex-wrap gap-2">
+            {completedConcepts?.length > 0 ? completedConcepts.map((c: string, i: number) => (
+              <span key={i} className="px-2.5 py-1.5 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[11px] sm:text-[12px] font-bold rounded-lg border border-emerald-500/20 flex items-center gap-1.5 shadow-sm break-words">
+                <CheckCircle2 size={13} className="shrink-0" /> {c}
+              </span>
+            )) : (
+              <span className="text-zinc-400 text-[12px] italic">Learning in progress...</span>
+            )}
+          </div>
+        </div>
+        
+        <div className="p-3 sm:p-4 bg-white/60 dark:bg-black/20 rounded-xl border border-blue-100 dark:border-blue-900/30 shadow-sm min-w-0">
+          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Up Next</p>
+          <p className="text-[14px] sm:text-[15px] font-semibold text-zinc-900 dark:text-zinc-200 flex items-center gap-2 break-words w-full">
+            <ArrowRight size={15} className="text-blue-500 shrink-0" /> 
+            <span className="truncate">{nextConcept}</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const extractTextFromNode = (node: any): string => {
   if (typeof node === 'string' || typeof node === 'number') return String(node);
@@ -36,7 +260,7 @@ const extractTextFromNode = (node: any): string => {
   return '';
 };
 
-const CopyButton = ({ text }: { text: string }) => {
+export const CopyButton = ({ text }: { text: string }) => {
   const [copied, setCopied] = useState(false);
   const handleCopy = () => {
     navigator.clipboard.writeText(text || "");
@@ -44,13 +268,13 @@ const CopyButton = ({ text }: { text: string }) => {
     setTimeout(() => setCopied(false), 2000);
   };
   return (
-    <button onClick={handleCopy} className="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800" title="Copy message">
-      {copied ? <CheckCircle2 size={15} className="text-emerald-500" /> : <Copy size={15} />}
+    <button onClick={handleCopy} className="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 shrink-0" title="Copy message">
+      {copied ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Copy size={14} />}
     </button>
   );
 };
 
-const CodeCopyButton = ({ text }: { text: string }) => {
+export const CodeCopyButton = ({ text }: { text: string }) => {
   const [copied, setCopied] = useState(false);
   const handleCopy = async () => {
     try {
@@ -64,35 +288,30 @@ const CodeCopyButton = ({ text }: { text: string }) => {
   return (
     <button 
       onClick={handleCopy}
-      className="flex items-center gap-1.5 px-2 py-1 text-zinc-400 hover:text-white transition-all rounded-md hover:bg-zinc-700"
+      className="flex items-center gap-1.5 px-2 py-1 text-zinc-400 hover:text-white transition-all rounded-md hover:bg-zinc-700 shrink-0"
     >
       {copied ? (
         <>
-          <CheckCircle2 size={12} className="text-emerald-400" />
-          <span className="text-[10px] font-google-sans font-bold uppercase tracking-wider text-emerald-400">Copied</span>
+          <CheckCircle2 size={11} className="text-emerald-400" />
+          <span className="text-[10px] font-google-sans font-bold uppercase tracking-wider text-emerald-400 hidden sm:inline">Copied</span>
         </>
       ) : (
         <>
-          <Copy size={12} />
-          <span className="text-[10px] font-google-sans font-bold uppercase tracking-wider">Copy</span>
+          <Copy size={11} />
+          <span className="text-[10px] font-google-sans font-bold uppercase tracking-wider hidden sm:inline">Copy</span>
         </>
       )}
     </button>
   );
 };
 
-// ==========================================
-// 2. INTERACTIVE IMAGE
-// ==========================================
-
-const InteractiveImage = ({ src, alt }: { src?: string; alt?: string }) => {
+export const InteractiveImage = ({ src, alt }: { src?: string; alt?: string }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
   const handleDownload = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!src || isDownloading) return;
-    
     setIsDownloading(true);
     try {
       const response = await fetch(src);
@@ -106,7 +325,6 @@ const InteractiveImage = ({ src, alt }: { src?: string; alt?: string }) => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
-      console.error("Download failed, opening in new tab", error);
       window.open(src, '_blank'); 
     } finally {
       setIsDownloading(false);
@@ -117,7 +335,7 @@ const InteractiveImage = ({ src, alt }: { src?: string; alt?: string }) => {
     <>
       <div 
         onClick={() => setIsModalOpen(true)}
-        className="relative group my-6 rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 cursor-zoom-in shadow-sm transition-all hover:shadow-md max-w-lg"
+        className="relative group my-4 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 cursor-zoom-in shadow-sm transition-all hover:shadow-md w-full max-w-full sm:max-w-md"
       >
         <img 
           src={src} 
@@ -126,46 +344,30 @@ const InteractiveImage = ({ src, alt }: { src?: string; alt?: string }) => {
           loading="lazy"
         />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
-          <div className="opacity-0 group-hover:opacity-100 bg-white/90 dark:bg-black/70 backdrop-blur-sm text-zinc-900 dark:text-zinc-100 px-4 py-2 rounded-xl flex items-center gap-2 font-google-sans font-bold text-[13px] shadow-xl transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-            <Maximize2 size={16} />
-            <span>Expand Image</span>
+          <div className="opacity-0 group-hover:opacity-100 bg-white/90 dark:bg-black/70 backdrop-blur-sm text-zinc-900 dark:text-zinc-100 px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-google-sans font-bold text-[11px] sm:text-[12px] shadow-xl transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+            <Maximize2 size={13} />
+            <span>Expand</span>
           </div>
         </div>
       </div>
 
       {isModalOpen && (
-        <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
-          onClick={() => setIsModalOpen(false)}
-        >
-          <div 
-            className="relative w-full max-w-5xl max-h-full flex flex-col items-center animate-in zoom-in-95 duration-300"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="absolute -top-12 right-0 left-0 flex justify-between items-center px-2">
-              <span className="text-white/70 font-google-sans text-[13px] font-semibold truncate max-w-[200px] sm:max-w-md">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 md:p-8 bg-black/80 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setIsModalOpen(false)}>
+          <div className="relative w-full max-w-4xl max-h-full flex flex-col items-center animate-in zoom-in-95 duration-300" onClick={(e) => e.stopPropagation()}>
+            <div className="absolute -top-10 right-0 left-0 flex justify-between items-center px-1">
+              <span className="text-white/70 font-google-sans text-[12px] font-semibold truncate max-w-[150px] sm:max-w-sm">
                 {alt || 'Generated Image'}
               </span>
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-colors"
-              >
-                <X size={20} />
+              <button onClick={() => setIsModalOpen(false)} className="p-1.5 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-colors">
+                <X size={16} />
               </button>
             </div>
-            <img 
-              src={src} 
-              alt={alt || 'Expanded output'} 
-              className="w-auto h-auto max-w-full max-h-[80vh] rounded-lg shadow-2xl object-contain bg-zinc-900/50" 
-            />
-            <div className="absolute -bottom-16 flex justify-center w-full">
-              <button 
-                onClick={handleDownload}
-                disabled={isDownloading}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-2xl font-google-sans font-bold text-[14px] shadow-lg shadow-blue-500/25 transition-all active:scale-95 disabled:opacity-70 disabled:active:scale-100"
-              >
-                {isDownloading ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
-                <span>{isDownloading ? 'Downloading...' : 'Download Image'}</span>
+            <img src={src} alt={alt || 'Expanded output'} className="w-auto h-auto max-w-full max-h-[75vh] rounded-lg shadow-2xl object-contain bg-zinc-900/50" />
+            <div className="absolute -bottom-14 flex justify-center w-full">
+              <button onClick={handleDownload} disabled={isDownloading} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl font-google-sans font-bold text-[12px] sm:text-[13px] shadow-lg shadow-blue-500/25 transition-all active:scale-95 disabled:opacity-70 disabled:active:scale-100">
+                {isDownloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+                <span className="hidden sm:inline">{isDownloading ? 'Downloading...' : 'Download Image'}</span>
+                <span className="sm:hidden">{isDownloading ? '...' : 'Download'}</span>
               </button>
             </div>
           </div>
@@ -175,89 +377,127 @@ const InteractiveImage = ({ src, alt }: { src?: string; alt?: string }) => {
   );
 };
 
-// ==========================================
-// 3. MARKDOWN COMPONENTS
-// ==========================================
-
-const MarkdownComponents = {
-  table: ({ children }: any) => (
-    <div className="my-6 overflow-x-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#0c0c0e] shadow-sm">
-      <table className="w-full text-left border-collapse text-sm font-outfit">{children}</table>
-    </div>
-  ),
-  thead: ({ children }: any) => <thead className="bg-zinc-50 dark:bg-[#111113] text-zinc-500 dark:text-zinc-400 font-google-sans font-bold uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-800">{children}</thead>,
-  th: ({ children }: any) => <th className="px-4 py-3 border-r border-zinc-200 dark:border-zinc-800 last:border-0">{children}</th>,
-  td: ({ children }: any) => <td className="px-4 py-3 border-r border-zinc-100 dark:border-zinc-800/50 last:border-0 border-b border-zinc-100 dark:border-zinc-800/50 text-zinc-800 dark:text-zinc-300 font-medium">{children}</td>,
-  
-  pre: ({ children }: any) => <div className="rounded-2xl overflow-hidden my-6 border border-zinc-800 shadow-lg relative group/code bg-[#0c0c0e]">{children}</div>,
-  code: ({ node, className, inline, children, ...props }: any) => {
-    const match = /language-(\w+)/.exec(className || '');
-    return !inline && match ? (
-      <div className="relative">
-        <div className="bg-[#111113] px-4 py-2.5 text-xs font-mono text-zinc-400 border-b border-zinc-800 flex justify-between items-center">
-          <span className="font-google-sans font-bold tracking-wider uppercase text-zinc-500">{match[1]}</span>
-          <CodeCopyButton text={String(children).replace(/\n$/, '')} />
-        </div>
-        <SyntaxHighlighter
-          style={oneDark}
-          language={match[1]}
-          PreTag="div"
-          className="!m-0 !bg-[#0c0c0e] !p-5 custom-scrollbar"
-          codeTagProps={{ className: "text-[14px] font-mono leading-relaxed text-zinc-200" }}
-        >
-          {String(children).replace(/\n$/, '')}
-        </SyntaxHighlighter>
+export const getCustomComponents = ({ sessionId, onAnswerSubmitted, isLast, isTyping }: { sessionId?: string | null, onAnswerSubmitted?: any, isLast?: boolean, isTyping?: boolean }) => {
+  return {
+    table: ({ children }: any) => (
+      <div className="my-5 w-full max-w-full overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#0c0c0e] shadow-sm custom-scrollbar">
+        <table className="w-full text-left border-collapse text-[12px] sm:text-[13px] font-outfit min-w-[400px]">{children}</table>
       </div>
-    ) : (
-      <code className={`${inline ? 'bg-zinc-100 dark:bg-[#1f1f22] text-zinc-900 dark:text-zinc-200 px-1.5 py-0.5 rounded-md border border-zinc-200 dark:border-zinc-800/50' : 'block p-4 bg-[#0c0c0e] text-zinc-200'} font-mono text-[0.85em] font-semibold`} {...props}>
+    ),
+    thead: ({ children }: any) => <thead className="bg-zinc-50 dark:bg-[#111113] text-zinc-500 dark:text-zinc-400 font-google-sans font-bold uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-800">{children}</thead>,
+    th: ({ children }: any) => <th className="px-3 py-2 border-r border-zinc-200 dark:border-zinc-800 last:border-0">{children}</th>,
+    td: ({ children }: any) => <td className="px-3 py-2 border-r border-zinc-100 dark:border-zinc-800/50 last:border-0 border-b border-zinc-100 dark:border-zinc-800/50 text-zinc-800 dark:text-zinc-300 font-medium whitespace-pre-wrap break-words">{children}</td>,
+    
+    h1: ({ children }: any) => <h1 className="font-google-sans text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 mt-6 sm:mt-8 mb-3 sm:mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 break-words">{children}</h1>,
+    h2: ({ children }: any) => <h2 className="font-google-sans text-lg sm:text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 mt-6 sm:mt-8 mb-3 sm:mb-4 break-words">{children}</h2>,
+    h3: ({ children }: any) => <h3 className="font-google-sans text-[16px] sm:text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100 mt-5 sm:mt-6 mb-2 sm:mb-3 break-words">{children}</h3>,
+    
+    ul: ({ children }: any) => <ul className="list-disc pl-4 sm:pl-5 space-y-1 sm:space-y-1.5 mb-4 font-outfit text-[14.5px] sm:text-[15px] text-zinc-800 dark:text-zinc-300 break-words w-full">{children}</ul>,
+    ol: ({ children }: any) => <ol className="list-decimal pl-4 sm:pl-5 space-y-1 sm:space-y-1.5 mb-4 font-outfit text-[14.5px] sm:text-[15px] text-zinc-800 dark:text-zinc-300 break-words w-full">{children}</ol>,
+    
+    li: ({ children, ...props }: any) => <li className="pl-1 leading-relaxed marker:text-zinc-400 dark:marker:text-zinc-600 break-words" {...props}>{children}</li>,
+    p: ({ children, ...props }: any) => <p className="text-[14.5px] sm:text-[15px] leading-relaxed mb-3 sm:mb-4 break-words w-full" {...props}>{children}</p>,
+    strong: ({ children }: any) => <strong className="font-bold text-zinc-900 dark:text-white break-words">{children}</strong>,
+    
+    a: ({ node, href, children, ...props }: any) => (
+      <a 
+        href={href} target="_blank" rel="noopener noreferrer" 
+        className="inline text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline underline-offset-2 decoration-blue-500/30 font-semibold transition-colors break-words" {...props}
+      >
         {children}
-      </code>
-    );
-  },
-  
-  p: ({ children }: any) => <p className="mb-4 last:mb-0 leading-relaxed font-outfit text-[15.5px] sm:text-[16px] text-zinc-800 dark:text-zinc-300">{children}</p>,
-  h3: ({ children }: any) => <h3 className="font-google-sans text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 mt-8 mb-4">{children}</h3>,
-  h2: ({ children }: any) => <h2 className="font-google-sans text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 mt-10 mb-6">{children}</h2>,
-  h1: ({ children }: any) => <h1 className="font-google-sans text-3xl sm:text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 mt-10 mb-6 pb-4 border-b border-zinc-200 dark:border-zinc-800">{children}</h1>,
-  
-  ul: ({ children }: any) => <ul className="list-disc pl-5 space-y-2 mb-4 font-outfit text-[15.5px] sm:text-[16px] text-zinc-800 dark:text-zinc-300">{children}</ul>,
-  ol: ({ children }: any) => <ol className="list-decimal pl-5 space-y-2 mb-4 font-outfit text-[15.5px] sm:text-[16px] text-zinc-800 dark:text-zinc-300">{children}</ol>,
-  
-  li: ({ children, ...props }: any) => <li className="pl-1 leading-relaxed marker:text-zinc-400 dark:marker:text-zinc-600" {...props}>{children}</li>,
-  
-  strong: ({ children }: any) => <strong className="font-bold text-zinc-900 dark:text-white">{children}</strong>,
-  
-  a: ({ node, href, children, ...props }: any) => (
-    <a 
-      href={href} 
-      target="_blank" 
-      rel="noopener noreferrer" 
-      className="inline text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline underline-offset-2 decoration-blue-500/30 font-semibold transition-colors break-words" 
-      {...props}
-    >
-      {children}
-      <span className="inline-flex items-center justify-center bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 text-[9px] font-google-sans uppercase font-bold px-1.5 py-0.5 rounded ml-1 align-middle whitespace-nowrap">
-        Source
-      </span>
-    </a>
-  ),
+        <span className="inline-flex items-center justify-center bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 text-[9px] font-google-sans uppercase font-bold px-1.5 py-0.5 rounded ml-1 align-middle whitespace-nowrap">
+          Source
+        </span>
+      </a>
+    ),
 
-  blockquote: ({ children }: any) => {
-    const text = extractTextFromNode(children).trim();
-    return (
-      <div className="w-full mt-4 mb-4 p-5 bg-blue-50/50 dark:bg-[#111113] border border-blue-200/50 dark:border-zinc-800 rounded-2xl flex items-start gap-3 shadow-sm">
-        <Sparkles size={18} className="text-blue-500 shrink-0 mt-0.5" />
-        <span className="leading-snug text-[15px] font-outfit font-semibold text-zinc-700 dark:text-zinc-300">{text}</span>
-      </div>
-    )
-  },
+    blockquote: ({ children }: any) => {
+      const text = extractTextFromNode(children).trim();
+      return (
+        <div className="w-full mt-3 mb-3 p-3 sm:p-4 bg-blue-50/50 dark:bg-[#111113] border border-blue-200/50 dark:border-zinc-800 rounded-xl flex items-start gap-2.5 shadow-sm min-w-0">
+          <Sparkles size={15} className="text-blue-500 shrink-0 mt-0.5" />
+          <span className="leading-snug text-[13.5px] sm:text-[14.5px] font-outfit font-semibold text-zinc-700 dark:text-zinc-300 break-words w-full">{text}</span>
+        </div>
+      )
+    },
 
-  img: ({ src, alt }: any) => <InteractiveImage src={src} alt={alt} />
-};
+    img: ({ src, alt }: any) => <InteractiveImage src={src} alt={alt} />,
 
+    code: ({ node, className, inline, children, ...props }: any) => {
+      const text = String(children).replace(/\n$/, '');
+      const match = /language-([a-zA-Z0-9_?\-]+)/.exec(className || '');
+      let lang = match ? match[1] : '';
+
+      if (lang === '' && text.trim().startsWith('{') && text.trim().includes('"component"')) {
+        lang = 'json';
+      }
+
+      if (!inline && (lang === 'json?chameleon' || lang === 'json')) {
+        let parsed = null;
+
+        try {
+          parsed = JSON.parse(text);
+        } catch (err) {
+          try {
+            const fixedStr = text.replace(/\\(?!["\\/bfnrt])/g, '\\\\');
+            parsed = JSON.parse(fixedStr);
+          } catch (err2) {
+            parsed = null;
+          }
+        }
+
+        if (parsed && (parsed.component === 'QuizWidget' || parsed.component === 'ProgressWidget')) {
+          if (parsed.component === 'QuizWidget') {
+            return <QuizWidget {...parsed.props} sessionId={sessionId} onAnswerSubmitted={onAnswerSubmitted} isHistorical={!isLast} />;
+          }
+          if (parsed.component === 'ProgressWidget') {
+            return <ProgressWidget {...parsed.props} />;
+          }
+        }
+
+        if (!parsed && isTyping) {
+          return (
+            <div className="my-4 p-4 sm:p-5 rounded-xl border border-blue-200/50 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-900/20 flex items-center gap-2.5 text-blue-600 dark:text-blue-400 shadow-inner animate-pulse w-full">
+              <Loader2 className="animate-spin shrink-0" size={18} />
+              <span className="font-google-sans font-bold text-[11px] sm:text-[12px] uppercase tracking-widest break-words">Generating Interactive Module...</span>
+            </div>
+          );
+        }
+      }
+
+      if (!inline && lang) {
+        return (
+          <div className="relative my-4 w-full max-w-full overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm min-w-0">
+            <div className="bg-[#111113] px-3 py-2 text-[10px] sm:text-[11px] font-mono text-zinc-400 border-b border-zinc-800 flex justify-between items-center rounded-t-xl">
+              <span className="font-google-sans font-bold tracking-wider uppercase text-zinc-500 truncate mr-2">
+                {lang.replace('?chameleon', '') || 'code'}
+              </span>
+              <CodeCopyButton text={text} />
+            </div>
+            <SyntaxHighlighter
+              style={oneDark}
+              language={lang.replace('?chameleon', '')}
+              PreTag="div"
+              className="!m-0 !bg-[#0c0c0e] !p-3 sm:!p-4 custom-scrollbar overflow-x-auto w-full rounded-b-xl"
+              codeTagProps={{ className: "text-[12px] sm:text-[13px] font-mono leading-relaxed text-zinc-200" }}
+            >
+              {text}
+            </SyntaxHighlighter>
+          </div>
+        )
+      }
+
+      return (
+        <code className={`${inline ? 'bg-zinc-100 dark:bg-[#1f1f22] text-zinc-900 dark:text-zinc-200 px-1.5 py-0.5 rounded-md border border-zinc-200 dark:border-zinc-800/50 break-words' : 'block p-3 bg-[#0c0c0e] text-zinc-200 overflow-x-auto rounded-xl custom-scrollbar w-full'} font-mono text-[0.8em] font-semibold`} {...props}>
+          {children}
+        </code>
+      );
+    }
+  }
+}
 
 // ==========================================
-// 4. TYPEWRITER EFFECT
+// 2. TYPEWRITER EFFECT
 // ==========================================
 
 const useTypewriter = (text: string, enabled: boolean, forceStop: boolean, onComplete?: () => void) => {
@@ -318,99 +558,79 @@ const TypewriterMessage = ({ content, isNew, forceStop, scrollRef, onComplete, c
   return <>{children(displayedText, isTyping)}</>;
 };
 
-
 // ==========================================
-// 5. MESSAGE ITEM
+// 3. MESSAGE ITEM
 // ==========================================
 
-const MessageItem = React.memo(({ m, index, isLast, loading, isTypingGlobal, isLocallyTyping, displayedContent, onRegenerate, onEditSubmit, isNewAssistant }: any) => {
+const MessageItem = React.memo(({ m, index, isLast, loading, isTypingGlobal, isLocallyTyping, displayedContent, onRegenerate, onEditSubmit, isNewAssistant, sessionId, onAnswerSubmitted }: any) => {
   const isUser = m.role === 'user';
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(m.content || "");
 
   useEffect(() => { setEditValue(m.content || ""); }, [m.content]);
 
+  const contentToProcess = isNewAssistant && displayedContent !== undefined ? displayedContent : (m.content || "");
+
+  const CustomMarkdownComponents = useMemo(() => {
+    return getCustomComponents({ sessionId, onAnswerSubmitted, isLast, isTyping: isLocallyTyping });
+  }, [sessionId, onAnswerSubmitted, isLast, isLocallyTyping]);
+
   if (isEditing) {
     return (
       <div className="flex flex-col w-full max-w-[95%] sm:max-w-[85%] md:max-w-[80%] self-end animate-in fade-in duration-200 mb-2">
         <div className="bg-white dark:bg-[#0c0c0e] border border-blue-500/50 focus-within:border-blue-500 rounded-2xl p-3 sm:p-4 shadow-sm transition-all">
-          <textarea
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            className="w-full bg-transparent font-outfit text-[15.5px] sm:text-[16px] text-zinc-900 dark:text-zinc-100 outline-none resize-none custom-scrollbar min-h-[80px]"
-            autoFocus
-          />
+          <textarea value={editValue} onChange={(e) => setEditValue(e.target.value)} className="w-full bg-transparent font-outfit text-[14.5px] sm:text-[15px] text-zinc-900 dark:text-zinc-100 outline-none resize-none custom-scrollbar min-h-[80px]" autoFocus />
           <div className="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800/60">
-            <button onClick={() => { setIsEditing(false); setEditValue(m.content); }} className="px-4 py-2 font-google-sans text-[13px] font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors">
-              Cancel
-            </button>
-            <button onClick={() => { setIsEditing(false); onEditSubmit(index, editValue); }} disabled={loading || isTypingGlobal || !editValue.trim()} className="px-4 py-2 font-google-sans text-[13px] font-bold bg-blue-600 text-white hover:bg-blue-500 rounded-xl transition-colors shadow-sm disabled:opacity-50">
-              Save & Regenerate
-            </button>
+            <button onClick={() => { setIsEditing(false); setEditValue(m.content); }} className="px-3 py-1.5 font-google-sans text-[12px] font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">Cancel</button>
+            <button onClick={() => { setIsEditing(false); onEditSubmit(index, editValue); }} disabled={loading || isTypingGlobal || !editValue.trim()} className="px-3 py-1.5 font-google-sans text-[12px] font-bold bg-blue-600 text-white hover:bg-blue-500 rounded-lg transition-colors shadow-sm disabled:opacity-50">Save & Regenerate</button>
           </div>
         </div>
       </div>
     );
   }
 
-  const contentToRender = isNewAssistant && displayedContent !== undefined ? displayedContent : (m.content || "");
-
   return (
-    <div className={`group flex flex-col gap-1 w-full animate-in fade-in ${isUser ? 'items-end' : 'items-start'}`}>
-      
+    <div className={`group flex flex-col gap-1 w-full animate-in fade-in ${isUser ? 'items-end' : 'items-start'} min-w-0`}>
       <div className={`relative max-w-[98%] sm:max-w-[92%] md:max-w-[88%] min-w-0 ${
         isUser 
-        ? 'bg-zinc-900 dark:bg-zinc-100 px-5 sm:px-6 py-3.5 sm:py-4 rounded-[1.5rem] rounded-tr-md text-white dark:text-zinc-900 shadow-sm border border-zinc-800 dark:border-zinc-200' 
-        : 'bg-white dark:bg-[#0c0c0e] border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-6 sm:p-8 shadow-sm text-zinc-900 dark:text-zinc-100 w-full'
+        ? 'bg-zinc-900 dark:bg-zinc-100 px-4 sm:px-5 py-3 sm:py-3.5 rounded-[1.25rem] rounded-tr-md text-white dark:text-zinc-900 shadow-sm border border-zinc-800 dark:border-zinc-200' 
+        : 'w-full'
       }`}>
-        <div className={`prose prose-zinc dark:prose-invert max-w-none break-words w-full font-outfit ${isUser ? 'prose-p:leading-relaxed prose-p:my-0 prose-p:text-white dark:prose-p:text-zinc-900' : ''}`}>
+        {/* IMPORTANT: Removed overflow-x-auto here so text wraps properly */}
+        <div className={`prose prose-zinc dark:prose-invert max-w-full break-words w-full font-outfit custom-scrollbar ${isUser ? 'prose-p:leading-relaxed prose-p:my-0 prose-p:text-white dark:prose-p:text-zinc-900' : ''}`}>
           {isUser ? (
-            <p className="font-outfit text-[15.5px] sm:text-[16px] m-0 font-medium tracking-wide whitespace-pre-wrap">{m.content}</p>
+            <p className="font-outfit text-[14.5px] sm:text-[15px] m-0 font-medium tracking-wide whitespace-pre-wrap">{m.content}</p>
           ) : (
             <>
-              {contentToRender ? (
-                <ReactMarkdown 
-                  remarkPlugins={[remarkGfm, remarkMath]} 
-                  rehypePlugins={[[rehypeKatex, { strict: false, throwOnError: false }]]} 
-                  components={MarkdownComponents}
-                >
-                  {contentToRender}
+              {contentToProcess && (
+                <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[[rehypeKatex, { strict: false, throwOnError: false }]]} components={CustomMarkdownComponents}>
+                  {contentToProcess}
                 </ReactMarkdown>
-              ) : (
-                <span className="font-outfit text-zinc-400 italic">Processing...</span>
               )}
               {isNewAssistant && isLocallyTyping && (
-                <span className="inline-block w-[4px] h-5 bg-blue-500 rounded-full animate-pulse ml-1 align-text-bottom" />
+                <span className="inline-block w-[3px] h-4 bg-blue-500 rounded-full animate-pulse ml-1 align-text-bottom" />
               )}
             </>
           )}
         </div>
       </div>
 
-      <div className={`flex items-center gap-1 opacity-100 transition-opacity mt-1.5 ${isUser ? 'mr-2 justify-end' : 'ml-2 justify-start'} sm:opacity-60 sm:hover:opacity-100`}>
+      <div className={`flex items-center gap-1 opacity-100 transition-opacity mt-1 ${isUser ? 'mr-1.5 justify-end' : 'ml-1.5 justify-start'} sm:opacity-60 sm:hover:opacity-100`}>
         <CopyButton text={m.content || ""} />
-        
         {isUser && !loading && !isTypingGlobal && (
-          <button onClick={() => setIsEditing(true)} className="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800" title="Edit prompt">
-            <PenLine size={15} />
-          </button>
+          <button onClick={() => setIsEditing(true)} className="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800" title="Edit prompt"><PenLine size={14} /></button>
         )}
-
         {!isUser && isLast && !loading && !isTypingGlobal && (
-          <button onClick={() => onRegenerate(index)} className="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800" title="Regenerate response">
-            <RefreshCw size={15} />
-          </button>
+          <button onClick={() => onRegenerate(index)} className="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800" title="Regenerate response"><RefreshCw size={14} /></button>
         )}
       </div>
-
     </div>
   );
 });
 MessageItem.displayName = 'MessageItem';
 
-
 // ==========================================
-// 6. PROMPT BAR 
+// 4. PROMPT BAR 
 // ==========================================
 
 const ActivePromptBar = ({ onSubmit, onStop, loading, isTyping }: any) => {
@@ -423,7 +643,7 @@ const ActivePromptBar = ({ onSubmit, onStop, loading, isTyping }: any) => {
     setChatInput(e.target.value);
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 180)}px`;
     }
   };
 
@@ -439,21 +659,19 @@ const ActivePromptBar = ({ onSubmit, onStop, loading, isTyping }: any) => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto pointer-events-auto">
-      <div className="bg-white/90 dark:bg-[#0c0c0e]/90 backdrop-blur-2xl border border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600 focus-within:border-blue-500 dark:focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/15 rounded-2xl sm:rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] transition-all duration-300 overflow-hidden flex flex-col">
-        
-        <div className="flex items-end gap-4 px-5 pt-4 pb-2">
+    <div className="w-full max-w-3xl mx-auto pointer-events-auto">
+      <div className="bg-white/90 dark:bg-[#0c0c0e]/90 backdrop-blur-2xl border border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600 focus-within:border-blue-500 dark:focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/15 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] transition-all duration-300 overflow-hidden flex flex-col">
+        <div className="flex items-end gap-3 px-4 pt-3 pb-2">
           <textarea
             ref={textareaRef}
             value={chatInput}
             onChange={handleInput}
             onKeyDown={handleKeyDown}
-            placeholder="Ask a follow-up or refine your study path..."
-            className="flex-1 bg-transparent font-outfit text-[15px] sm:text-[16px] font-medium text-zinc-900 dark:text-zinc-100 outline-none placeholder:text-zinc-500 dark:placeholder:text-zinc-400 min-h-[52px] max-h-[200px] resize-none custom-scrollbar leading-relaxed pt-1.5 pl-1"
+            placeholder="Ask a follow-up or request your progress tracker..."
+            className="flex-1 bg-transparent font-outfit text-[14.5px] sm:text-[15px] font-medium text-zinc-900 dark:text-zinc-100 outline-none placeholder:text-zinc-500 dark:placeholder:text-zinc-400 min-h-[44px] max-h-[180px] resize-none custom-scrollbar leading-relaxed pt-1 pl-1"
             disabled={loading || isTyping}
             rows={1}
           />
-          
           <button
             onClick={() => {
               if (loading || isTyping) onStop();
@@ -464,47 +682,27 @@ const ActivePromptBar = ({ onSubmit, onStop, loading, isTyping }: any) => {
               }
             }}
             disabled={!loading && !isTyping && !chatInput.trim()}
-            className={`h-10 w-10 sm:h-12 sm:w-12 mb-1.5 shrink-0 flex items-center justify-center rounded-xl sm:rounded-2xl transition-all duration-200 shadow-sm ${
-              loading || isTyping
-                ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:scale-95 shadow-none'
-                : !chatInput.trim()
-                  ? 'bg-zinc-100 dark:bg-[#111113] border border-transparent dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 cursor-not-allowed shadow-none'
-                  : 'bg-blue-600 text-white hover:bg-blue-500 active:scale-95 shadow-[0_4px_14px_rgba(37,99,235,0.3)]'
+            className={`h-9 w-9 sm:h-10 sm:w-10 mb-1 shrink-0 flex items-center justify-center rounded-xl transition-all duration-200 shadow-sm ${
+              loading || isTyping ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:scale-95 shadow-none' : !chatInput.trim() ? 'bg-zinc-100 dark:bg-[#111113] border border-transparent dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 cursor-not-allowed shadow-none' : 'bg-blue-600 text-white hover:bg-blue-500 active:scale-95 shadow-[0_4px_14px_rgba(37,99,235,0.3)]'
             }`}
           >
-            {loading || isTyping ? (
-              <Square size={16} className="fill-current" />
-            ) : (
-              <Send size={20} className="-translate-x-px translate-y-px" />
-            )}
+            {loading || isTyping ? <Square size={14} className="fill-current" /> : <Send size={16} className="-translate-x-px translate-y-px" />}
           </button>
         </div>
 
-        <div className="flex items-center gap-2.5 px-4 sm:px-5 py-2.5 border-t border-zinc-200 dark:border-zinc-800 bg-transparent overflow-x-auto scrollbar-hide">
-          <button
-            type="button"
-            onClick={() => setDeepSearch(v => !v)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border font-google-sans text-[12px] font-bold transition-all shrink-0 ${
-              deepSearch
-                ? 'bg-violet-50 dark:bg-violet-500/10 border-violet-200 dark:border-violet-500/30 text-violet-700 dark:text-violet-400'
-                : 'bg-transparent border-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/60 text-zinc-500 dark:text-zinc-400'
-            }`}
-          >
-            <Zap size={13} className={deepSearch ? 'text-violet-600 dark:text-violet-400' : ''} />
-            Deep Think
+        <div className="flex items-center gap-2 px-3 sm:px-4 py-2 border-t border-zinc-200 dark:border-zinc-800 bg-transparent overflow-x-auto scrollbar-hide">
+          <button type="button" onClick={() => setDeepSearch(v => !v)} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-google-sans text-[11px] font-bold transition-all shrink-0 ${deepSearch ? 'bg-violet-50 dark:bg-violet-500/10 border-violet-200 dark:border-violet-500/30 text-violet-700 dark:text-violet-400' : 'bg-transparent border-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/60 text-zinc-500 dark:text-zinc-400'}`}>
+            <Zap size={12} className={deepSearch ? 'text-violet-600 dark:text-violet-400' : ''} /> Deep Think
           </button>
-
-          <button
-            type="button"
-            onClick={() => setWebAccess(v => !v)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border font-google-sans text-[12px] font-bold transition-all shrink-0 ${
-              webAccess
-                ? 'bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30 text-blue-700 dark:text-blue-400'
-                : 'bg-transparent border-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/60 text-zinc-500 dark:text-zinc-400'
-            }`}
-          >
-            <Globe size={13} className={webAccess ? 'text-blue-600 dark:text-blue-400' : ''} />
-            Web Search
+          <button type="button" onClick={() => setWebAccess(v => !v)} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-google-sans text-[11px] font-bold transition-all shrink-0 ${webAccess ? 'bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30 text-blue-700 dark:text-blue-400' : 'bg-transparent border-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/60 text-zinc-500 dark:text-zinc-400'}`}>
+            <Globe size={12} className={webAccess ? 'text-blue-600 dark:text-blue-400' : ''} /> Web Search
+          </button>
+          <div className="w-[1px] h-3 bg-zinc-200 dark:bg-zinc-700 mx-1"></div>
+          <button type="button" onClick={() => { if (!loading && !isTyping) { onSubmit("I'm ready to take a quick quiz on this concept."); } }} disabled={loading || isTyping} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/60 font-google-sans text-[11px] font-bold transition-all shrink-0 text-zinc-500 dark:text-zinc-400 disabled:opacity-50">
+            <BrainCircuit size={13} className="text-pink-500" /> Take Quiz
+          </button>
+          <button type="button" onClick={() => { if (!loading && !isTyping) { onSubmit("Please show my current progress tracker and tell me what we should cover next."); } }} disabled={loading || isTyping} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/60 font-google-sans text-[11px] font-bold transition-all shrink-0 text-zinc-500 dark:text-zinc-400 disabled:opacity-50">
+            <Target size={13} className="text-indigo-500" /> Track Progress
           </button>
         </div>
       </div>
@@ -512,9 +710,8 @@ const ActivePromptBar = ({ onSubmit, onStop, loading, isTyping }: any) => {
   );
 };
 
-
 // ==========================================
-// 7. INIT FORM (FIXED RESPONSIVENESS)
+// 5. INIT FORM
 // ==========================================
 
 const SUGGESTIONS = [
@@ -535,107 +732,37 @@ const InitForm = ({ onSubmit, loading }: { onSubmit: (e: any) => void, loading: 
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col justify-center animate-in fade-in slide-in-from-bottom-2 duration-700 px-2 sm:px-4 md:px-6">
-      
-      {/* FIXED LOGO HEADER: Stacks on mobile, side-by-side on desktop */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 mb-8 md:mb-12 w-full text-center sm:text-left">
-        <Image 
-          src="/logo.png" 
-          width={220}
-          height={58}
-          alt="InfraCore Logo" 
-          className="w-[140px] sm:w-[160px] md:w-[220px] h-auto dark:invert object-contain opacity-95 transition-all duration-500 shrink-0" 
-          priority 
-        />
-        <div className="hidden sm:block h-8 md:h-10 w-[1.5px] bg-zinc-200 dark:bg-zinc-800 rounded-full shrink-0" />
-        <span className="font-google-sans text-[18px] sm:text-[20px] md:text-[24px] font-bold text-blue-600 dark:text-blue-400 tracking-tight whitespace-nowrap pt-1">
-          Study Agent
-        </span>
+    <div className="w-full max-w-3xl mx-auto flex flex-col justify-center animate-in fade-in slide-in-from-bottom-2 duration-700 px-3 sm:px-5">
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 mb-8 md:mb-10 w-full text-center sm:text-left">
+        <Image src="/logo.png" width={200} height={50} alt="InfraCore Logo" className="w-[130px] sm:w-[150px] md:w-[180px] h-auto dark:invert object-contain opacity-95 transition-all duration-500 shrink-0" priority />
+        <div className="hidden sm:block h-6 md:h-8 w-[1.5px] bg-zinc-200 dark:bg-zinc-800 rounded-full shrink-0" />
+        <span className="font-google-sans text-[16px] sm:text-[18px] md:text-[20px] font-bold text-blue-600 dark:text-blue-400 tracking-tight whitespace-nowrap pt-1">Study Agent</span>
       </div>
       
-      <div className="w-full text-left bg-white dark:bg-[#0c0c0e] border border-zinc-200 dark:border-zinc-800 focus-within:border-blue-500 dark:focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 rounded-3xl shadow-xl dark:shadow-none p-5 sm:p-8 md:p-10 transition-all duration-300">
-        <form onSubmit={onSubmit} className="flex flex-col gap-5 md:gap-8">
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            <div className="space-y-2">
-              <label className="font-google-sans text-[11px] md:text-[12px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-[0.15em] pl-1">
-                Subject
-              </label>
-              <input 
-                name="subject" 
-                value={subject} 
-                onChange={(e) => setSubject(e.target.value)} 
-                required 
-                placeholder="e.g. Physics" 
-                className="font-outfit w-full bg-zinc-50 dark:bg-[#111113] border border-zinc-200 dark:border-zinc-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 px-4 py-3.5 rounded-xl text-[14px] font-medium outline-none transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400" 
-                disabled={loading} 
-              />
+      <div className="w-full text-left bg-white dark:bg-[#0c0c0e] border border-zinc-200 dark:border-zinc-800 focus-within:border-blue-500 dark:focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 rounded-2xl shadow-xl dark:shadow-none p-5 sm:p-7 md:p-8 transition-all duration-300">
+        <form onSubmit={onSubmit} className="flex flex-col gap-4 md:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5">
+            <div className="space-y-1.5">
+              <label className="font-google-sans text-[10px] md:text-[11px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-[0.15em] pl-1">Subject</label>
+              <input name="subject" value={subject} onChange={(e) => setSubject(e.target.value)} required placeholder="e.g. Physics" className="font-outfit w-full bg-zinc-50 dark:bg-[#111113] border border-zinc-200 dark:border-zinc-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 px-3.5 py-3 rounded-xl text-[13.5px] font-medium outline-none transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400" disabled={loading} />
             </div>
-            
-            <div className="space-y-2">
-              <label className="font-google-sans text-[11px] md:text-[12px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-[0.15em] pl-1">
-                Academic Level
-              </label>
-              <input 
-                name="level" 
-                value={level} 
-                onChange={(e) => setLevel(e.target.value)} 
-                required 
-                placeholder="e.g. Graduate" 
-                className="font-outfit w-full bg-zinc-50 dark:bg-[#111113] border border-zinc-200 dark:border-zinc-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 px-4 py-3.5 rounded-xl text-[14px] font-medium outline-none transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400" 
-                disabled={loading} 
-              />
+            <div className="space-y-1.5">
+              <label className="font-google-sans text-[10px] md:text-[11px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-[0.15em] pl-1">Academic Level</label>
+              <input name="level" value={level} onChange={(e) => setLevel(e.target.value)} required placeholder="e.g. Graduate" className="font-outfit w-full bg-zinc-50 dark:bg-[#111113] border border-zinc-200 dark:border-zinc-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 px-3.5 py-3 rounded-xl text-[13.5px] font-medium outline-none transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400" disabled={loading} />
             </div>
           </div>
-
-          <div className="space-y-2">
-            <label className="font-google-sans text-[11px] md:text-[12px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-[0.15em] pl-1">
-              Your Primary Inquiry
-            </label>
-            <textarea 
-              name="question" 
-              value={question} 
-              onChange={(e) => setQuestion(e.target.value)} 
-              required 
-              placeholder="Describe the concept or problem you'd like to master..." 
-              className="font-outfit w-full bg-zinc-50 dark:bg-[#111113] border border-zinc-200 dark:border-zinc-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 px-5 py-4 rounded-[1.5rem] text-[15px] md:text-[16px] font-medium outline-none transition-all text-zinc-900 dark:text-zinc-100 min-h-[100px] md:min-h-[120px] max-h-[180px] resize-none leading-relaxed custom-scrollbar" 
-              disabled={loading} 
-            />
+          <div className="space-y-1.5">
+            <label className="font-google-sans text-[10px] md:text-[11px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-[0.15em] pl-1">Your Primary Inquiry</label>
+            <textarea name="question" value={question} onChange={(e) => setQuestion(e.target.value)} required placeholder="Describe the concept or problem you'd like to master..." className="font-outfit w-full bg-zinc-50 dark:bg-[#111113] border border-zinc-200 dark:border-zinc-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 px-4 py-3.5 rounded-[1.25rem] text-[14px] md:text-[14.5px] font-medium outline-none transition-all text-zinc-900 dark:text-zinc-100 min-h-[90px] md:min-h-[100px] max-h-[160px] resize-none leading-relaxed custom-scrollbar" disabled={loading} />
           </div>
-
-          <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6 pt-5 md:pt-6 border-t border-zinc-100 dark:border-zinc-800/60 mt-1 md:mt-2">
-            
+          <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-5 pt-4 md:pt-5 border-t border-zinc-100 dark:border-zinc-800/60 mt-1 md:mt-2">
             <div className="flex flex-wrap gap-2 justify-start w-full xl:w-auto">
               {SUGGESTIONS.map((s, idx) => (
-                <button 
-                  key={idx} 
-                  type="button" 
-                  onClick={() => handleSuggestion(s)} 
-                  disabled={loading} 
-                  className="px-3 md:px-4 py-1.5 md:py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-full font-google-sans text-[12px] font-bold text-zinc-600 dark:text-zinc-300 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all active:scale-95 shadow-sm"
-                >
-                  {s.subject}
-                </button>
+                <button key={idx} type="button" onClick={() => handleSuggestion(s)} disabled={loading} className="px-3 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-full font-google-sans text-[11px] font-bold text-zinc-600 dark:text-zinc-300 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all active:scale-95 shadow-sm">{s.subject}</button>
               ))}
             </div>
-
-            <button 
-              type="submit" 
-              disabled={loading} 
-              className="w-full xl:w-auto px-8 md:px-10 py-3.5 md:py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl md:rounded-2xl font-google-sans text-[14px] font-bold shadow-[0_8px_20px_rgba(37,99,235,0.25)] transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-70 group shrink-0"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="animate-spin" size={18} />
-                  <span>Initializing...</span>
-                </>
-              ) : (
-                <>
-                  <GraduationCap size={20} className="md:size-[22px]" />
-                  <span>Start Learning</span>
-                  <ArrowRight size={18} className="hidden md:block group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
+            <button type="submit" disabled={loading} className="w-full xl:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-google-sans text-[13px] font-bold shadow-[0_4px_14px_rgba(37,99,235,0.25)] transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70 group shrink-0">
+              {loading ? <><Loader2 className="animate-spin" size={16} /><span>Initializing...</span></> : <><GraduationCap size={18} /><span>Start Learning</span><ArrowRight size={16} className="hidden md:block group-hover:translate-x-1 transition-transform" /></>}
             </button>
           </div>
         </form>
@@ -645,7 +772,7 @@ const InitForm = ({ onSubmit, loading }: { onSubmit: (e: any) => void, loading: 
 }
 
 // ==========================================
-// 8. SIDEBAR
+// 6. SIDEBAR
 // ==========================================
 
 const HistorySidebar = React.memo(({ sessions, sessionId, filter, setFilter, loadSession, setEditingId, editingId, editTitle, setEditTitle, saveRename, handleDelete, createNewSession }: any) => {
@@ -654,82 +781,40 @@ const HistorySidebar = React.memo(({ sessions, sessionId, filter, setFilter, loa
 
   return (
     <div className="flex flex-col h-full bg-[#fafafa] dark:bg-[#050505] relative overflow-hidden border-r border-zinc-200 dark:border-zinc-800/80">
-      
-      <div className="p-6 pb-2 space-y-6 relative z-10">
-        <button 
-          onClick={() => { createNewSession(); setIsSelectMode(false); }}
-          className="w-full flex items-center justify-center gap-2.5 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-[14px] shadow-sm transition-all active:scale-[0.98] group"
-        >
-          <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
-          <span className="font-google-sans">New Session</span>
-        </button>
-
-        <div className="space-y-4">
+      <div className="p-5 pb-2 space-y-5 relative z-10">
+        <button onClick={() => { createNewSession(); setIsSelectMode(false); }} className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-[13px] shadow-sm transition-all active:scale-[0.98] group"><Plus size={16} className="group-hover:rotate-90 transition-transform duration-300" /><span className="font-google-sans">New Session</span></button>
+        <div className="space-y-3">
           <div className="flex items-center justify-between px-1">
-            <h3 className="font-google-sans text-[11px] font-bold uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500">History</h3>
-            <div className="flex items-center gap-3">
-              {isSelectMode && (
-                <button 
-                  onClick={async () => {
-                    const ids = filteredSessions.map((s: any) => s.id);
-                    for (let id of ids) {
-                      await handleDelete({ stopPropagation: () => {} } as any, id);
-                    }
-                    setIsSelectMode(false);
-                  }}
-                  className="font-google-sans text-[11px] font-bold uppercase tracking-wider text-red-500 hover:text-red-600 transition-colors"
-                >
-                  Delete All
-                </button>
-              )}
-              <button 
-                onClick={() => setIsSelectMode(!isSelectMode)}
-                className={`font-google-sans text-[11px] font-bold uppercase tracking-wider transition-colors ${isSelectMode ? 'text-blue-600 dark:text-blue-500' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}
-              >
-                {isSelectMode ? 'Done' : 'Manage'}
-              </button>
+            <h3 className="font-google-sans text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500">History</h3>
+            <div className="flex items-center gap-2">
+              {isSelectMode && <button onClick={async () => { const ids = filteredSessions.map((s: any) => s.id); for (let id of ids) { await handleDelete({ stopPropagation: () => {} } as any, id); } setIsSelectMode(false); }} className="font-google-sans text-[10px] font-bold uppercase tracking-wider text-red-500 hover:text-red-600 transition-colors">Delete All</button>}
+              <button onClick={() => setIsSelectMode(!isSelectMode)} className={`font-google-sans text-[10px] font-bold uppercase tracking-wider transition-colors ${isSelectMode ? 'text-blue-600 dark:text-blue-500' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}>{isSelectMode ? 'Done' : 'Manage'}</button>
             </div>
           </div>
-
           <div className="relative group">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-blue-500 transition-colors" size={15} />
-            <input 
-              placeholder="Search history..." 
-              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-[#0c0c0e] border border-zinc-200 dark:border-zinc-800 rounded-xl font-outfit text-[13px] font-medium focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 shadow-sm"
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-            />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-blue-500 transition-colors" size={14} />
+            <input placeholder="Search history..." className="w-full pl-9 pr-3 py-2.5 bg-white dark:bg-[#0c0c0e] border border-zinc-200 dark:border-zinc-800 rounded-lg font-outfit text-[12px] font-medium focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 shadow-sm" value={filter} onChange={(e) => setFilter(e.target.value)} />
           </div>
         </div>
       </div>
-      
-      <div className={`flex-1 overflow-y-auto px-4 mt-4 space-y-1.5 custom-scrollbar pb-6`}>
+      <div className={`flex-1 overflow-y-auto px-3 mt-3 space-y-1 custom-scrollbar pb-6`}>
         {filteredSessions.map((s:any) => (
-          <div key={s.id} className={`group relative p-3 rounded-2xl cursor-pointer transition-all flex items-center gap-3 ${sessionId === s.id && !isSelectMode ? 'bg-white dark:bg-[#111113] border border-zinc-200 dark:border-zinc-700 shadow-sm' : 'border border-transparent hover:bg-zinc-100 dark:hover:bg-[#0c0c0e]'}`}>
-            
-            {isSelectMode && (
-              <button onClick={(e) => { e.stopPropagation(); handleDelete(e, s.id); }} className="shrink-0 text-zinc-400 dark:text-zinc-600 hover:text-red-500 dark:hover:text-red-500 transition-colors">
-                <Trash2 size={16} />
-              </button>
-            )}
-
+          <div key={s.id} className={`group relative p-2.5 rounded-xl cursor-pointer transition-all flex items-center gap-2.5 ${sessionId === s.id && !isSelectMode ? 'bg-white dark:bg-[#111113] border border-zinc-200 dark:border-zinc-700 shadow-sm' : 'border border-transparent hover:bg-zinc-100 dark:hover:bg-[#0c0c0e]'}`}>
+            {isSelectMode && <button onClick={(e) => { e.stopPropagation(); handleDelete(e, s.id); }} className="shrink-0 text-zinc-400 dark:text-zinc-600 hover:text-red-500 dark:hover:text-red-500 transition-colors"><Trash2 size={14} /></button>}
             <div onClick={() => !isSelectMode && loadSession(s.id)} className="flex-1 min-w-0">
               {editingId === s.id ? (
-                <div className="flex items-center gap-2">
-                  <input autoFocus value={editTitle} onChange={(e)=>setEditTitle(e.target.value)} className="bg-transparent font-outfit text-[14px] font-bold outline-none w-full border-b border-blue-400 text-zinc-900 dark:text-white" onKeyDown={(e) => e.key === 'Enter' && saveRename(e as any, s.id)} />
-                  <button onClick={(e)=>saveRename(e, s.id)} className="p-1 text-emerald-500 hover:scale-110 transition-transform"><Check size={18} /></button>
+                <div className="flex items-center gap-1.5">
+                  <input autoFocus value={editTitle} onChange={(e)=>setEditTitle(e.target.value)} className="bg-transparent font-outfit text-[13px] font-bold outline-none w-full border-b border-blue-400 text-zinc-900 dark:text-white" onKeyDown={(e) => e.key === 'Enter' && saveRename(e as any, s.id)} />
+                  <button onClick={(e)=>saveRename(e, s.id)} className="p-0.5 text-emerald-500 hover:scale-110 transition-transform"><Check size={16} /></button>
                 </div>
               ) : (
-                <button className={`w-full text-left font-outfit text-[14px] truncate transition-colors ${sessionId === s.id && !isSelectMode ? 'font-bold text-zinc-900 dark:text-white' : 'font-semibold text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-200'}`}>
-                  {s.title}
-                </button>
+                <button className={`w-full text-left font-outfit text-[13px] truncate transition-colors ${sessionId === s.id && !isSelectMode ? 'font-bold text-zinc-900 dark:text-white' : 'font-medium text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-200'}`}>{s.title}</button>
               )}
             </div>
-
             {!isSelectMode && editingId !== s.id && (
               <div className="flex gap-0.5 opacity-100 transition-opacity sm:opacity-60 sm:group-hover:opacity-100">
-                <button onClick={(e)=>{ e.stopPropagation(); setEditingId(s.id); setEditTitle(s.title); }} className="p-1.5 text-zinc-400 hover:text-blue-500 transition-colors" title="Rename"><Edit3 size={14} /></button>
-                <button onClick={(e)=>handleDelete(e, s.id)} className="p-1.5 text-zinc-400 hover:text-red-500 transition-colors" title="Delete"><Trash2 size={14} /></button>
+                <button onClick={(e)=>{ e.stopPropagation(); setEditingId(s.id); setEditTitle(s.title); }} className="p-1 text-zinc-400 hover:text-blue-500 transition-colors" title="Rename"><Edit3 size={13} /></button>
+                <button onClick={(e)=>handleDelete(e, s.id)} className="p-1 text-zinc-400 hover:text-red-500 transition-colors" title="Delete"><Trash2 size={13} /></button>
               </div>
             )}
           </div>
@@ -740,9 +825,8 @@ const HistorySidebar = React.memo(({ sessions, sessionId, filter, setFilter, loa
 });
 HistorySidebar.displayName = 'HistorySidebar';
 
-
 // ==========================================
-// 9. MAIN PAGE
+// 7. MAIN PAGE
 // ==========================================
 
 export default function StudyChatPage() {
@@ -816,7 +900,7 @@ export default function StudyChatPage() {
     const level = formData.get('level') as string;
     const question = formData.get('question') as string;
 
-    const userMessage = `Topic: ${subject} (${level})\nQuestion: ${question}`;
+    const userMessage = `Topic: ${subject} (${level})\nQuestion: ${question}\n\nPlease start teaching me step-by-step using the Socratic method.`;
     setMessages([{ role: 'user', content: userMessage }]);
     
     try {
@@ -907,12 +991,36 @@ export default function StudyChatPage() {
         .font-outfit { font-family: 'Outfit', sans-serif !important; }
         .font-google-sans { font-family: 'Google Sans', sans-serif !important; }
 
-        /* KaTeX Overflow Fix for Linear Algebra / Matrices */
+        /* GLOBALLY FORCE OVERFLOW PREVENTION */
+        .prose {
+          max-width: 100% !important;
+          /* Explicitly force wrapping */
+          white-space: normal !important;
+          word-wrap: break-word !important;
+          overflow-wrap: anywhere !important; 
+        }
+        .prose p, .prose ul, .prose ol, .prose li, .prose h1, .prose h2, .prose h3 {
+          max-width: 100% !important;
+          white-space: normal !important;
+          word-wrap: break-word !important;
+          overflow-wrap: anywhere !important;
+        }
+        .prose table {
+          display: block !important;
+          overflow-x: auto !important;
+        }
+
         .katex-display {
-          overflow-x: auto;
-          overflow-y: hidden;
-          padding-bottom: 0.5rem;
-          scrollbar-width: thin;
+          overflow-x: auto !important;
+          overflow-y: hidden !important;
+          padding-bottom: 0.5rem !important;
+          scrollbar-width: thin !important;
+          max-width: 100% !important;
+        }
+        .katex {
+          white-space: normal !important;
+          word-wrap: break-word !important;
+          overflow-wrap: anywhere !important;
         }
         .katex-display::-webkit-scrollbar {
           height: 6px;
@@ -929,7 +1037,7 @@ export default function StudyChatPage() {
       <div className="fixed inset-0 top-[64px] sm:top-[72px] flex w-full overflow-hidden bg-[#fafafa] dark:bg-[#050505] font-outfit text-zinc-900 dark:text-zinc-100 antialiased selection:bg-blue-500/20">
         
         {/* SIDEBAR NAVIGATION */}
-        <aside className="hidden md:flex flex-col w-80 z-10 shrink-0">
+        <aside className="hidden md:flex flex-col w-72 z-10 shrink-0">
           <HistorySidebar 
             sessions={sessions} sessionId={sessionId} filter={filter} setFilter={setFilter} 
             loadSession={loadSession} setEditingId={setEditingId} editingId={editingId} 
@@ -941,10 +1049,10 @@ export default function StudyChatPage() {
         {/* MOBILE MENU */}
         {mobileMenuOpen && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm md:hidden" onClick={() => setMobileMenuOpen(false)}>
-            <div className="absolute left-0 top-0 h-full w-[280px] bg-[#fafafa] dark:bg-[#050505] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
-              <div className="h-16 border-b border-zinc-200 dark:border-zinc-800/80 flex justify-between items-center px-6 shrink-0">
-                <span className="font-google-sans font-bold text-sm tracking-wide text-zinc-900 dark:text-white uppercase">History</span>
-                <button onClick={() => setMobileMenuOpen(false)} className="p-2 -mr-2 text-zinc-500 hover:bg-zinc-200 dark:hover:bg-[#0c0c0e] rounded-xl transition-colors"><X size={20} /></button>
+            <div className="absolute left-0 top-0 h-full w-[260px] bg-[#fafafa] dark:bg-[#050505] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+              <div className="h-14 border-b border-zinc-200 dark:border-zinc-800/80 flex justify-between items-center px-5 shrink-0">
+                <span className="font-google-sans font-bold text-xs tracking-wide text-zinc-900 dark:text-white uppercase">History</span>
+                <button onClick={() => setMobileMenuOpen(false)} className="p-1.5 -mr-1.5 text-zinc-500 hover:bg-zinc-200 dark:hover:bg-[#0c0c0e] rounded-lg transition-colors"><X size={18} /></button>
               </div>
               <div className="flex-1 overflow-hidden">
                 <HistorySidebar sessions={sessions} sessionId={sessionId} filter={filter} setFilter={setFilter} loadSession={loadSession} setEditingId={setEditingId} editingId={editingId} editTitle={editTitle} setEditTitle={setEditTitle} saveRename={saveRename} handleDelete={handleDelete} createNewSession={() => {setMessages([]); setSessionId(null); setMobileMenuOpen(false); setLastAssistantIndex(-1);}} />
@@ -956,59 +1064,58 @@ export default function StudyChatPage() {
         {/* MAIN CHAT AREA */}
         <main className="flex-1 flex flex-col min-w-0 relative h-full bg-[#fafafa] dark:bg-[#050505]">
           
-          <header className="md:hidden h-[60px] shrink-0 flex items-center justify-between px-4 sm:px-6 z-30 bg-white/80 dark:bg-[#050505]/80 backdrop-blur-xl border-b border-zinc-200/80 dark:border-zinc-800/80 absolute top-0 w-full">
-            <div className="flex items-center gap-3">
-              <button className="flex items-center justify-center p-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-[#0c0c0e] rounded-xl transition-colors" onClick={() => setMobileMenuOpen(true)}>
-                <Menu size={22} />
+          <header className="md:hidden h-[56px] shrink-0 flex items-center justify-between px-4 z-30 bg-white/80 dark:bg-[#050505]/80 backdrop-blur-xl border-b border-zinc-200/80 dark:border-zinc-800/80 absolute top-0 w-full">
+            <div className="flex items-center gap-2.5">
+              <button className="flex items-center justify-center p-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-[#0c0c0e] rounded-lg transition-colors" onClick={() => setMobileMenuOpen(true)}>
+                <Menu size={20} />
               </button>
-              <span className="font-google-sans text-[13px] font-bold text-zinc-500 dark:text-zinc-400">
+              <span className="font-google-sans text-[12px] font-bold text-zinc-500 dark:text-zinc-400">
                 Chat History
               </span>
             </div>
           </header>
 
           {!messages.length ? (
-            /* FIXED: Removed justify-center and used m-auto in the child to prevent top cutoff */
             <div className="flex-1 overflow-y-auto flex flex-col p-4 sm:p-8 custom-scrollbar">
-              <div className="m-auto w-full pt-16 pb-10">
+              <div className="m-auto w-full pt-12 pb-8">
                 <InitForm onSubmit={handleInitSubmit} loading={loading} />
               </div>
             </div>
           ) : (
             <>
               {/* Messages Scroll Area */}
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pt-20 md:pt-8 scroll-smooth custom-scrollbar" ref={scrollRef}>
-                <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
+              <div className="flex-1 overflow-y-auto p-3 sm:p-5 md:p-8 pt-20 md:pt-6 scroll-smooth custom-scrollbar" ref={scrollRef}>
+                <div className="max-w-3xl mx-auto space-y-5 sm:space-y-6">
                   {messages.map((m, i) => {
                     const isNewAssistant = m.role === 'assistant' && i === lastAssistantIndex;
                     if (isNewAssistant) {
                       return (
                         <TypewriterMessage key={`tw-${i}`} content={m.content} isNew={true} forceStop={forceStop} onComplete={() => setIsTyping(false)} scrollRef={scrollRef}>
                           {(displayed: any, isLocalTyping: boolean) => (
-                            <MessageItem m={m} index={i} isLast={i === messages.length - 1} loading={loading} isTypingGlobal={isTyping} onRegenerate={handleRegenerate} onEditSubmit={handleEditSubmit} isNewAssistant={true} forceStop={forceStop} onTypingComplete={() => setIsTyping(false)} displayedContent={displayed} isLocallyTyping={isLocalTyping} />
+                            <MessageItem m={m} index={i} isLast={i === messages.length - 1} loading={loading} isTypingGlobal={isTyping} onRegenerate={handleRegenerate} onEditSubmit={handleEditSubmit} isNewAssistant={true} forceStop={forceStop} onTypingComplete={() => setIsTyping(false)} displayedContent={displayed} isLocallyTyping={isLocalTyping} sessionId={sessionId} onAnswerSubmitted={handleChatSubmit} />
                           )}
                         </TypewriterMessage>
                       );
                     }
-                    return <MessageItem key={`msg-${i}`} m={m} index={i} isLast={m.role === 'assistant' && i === messages.length - 1} loading={loading} isTypingGlobal={isTyping} onRegenerate={handleRegenerate} onEditSubmit={handleEditSubmit} isNewAssistant={false} />;
+                    return <MessageItem key={`msg-${i}`} m={m} index={i} isLast={m.role === 'assistant' && i === messages.length - 1} loading={loading} isTypingGlobal={isTyping} onRegenerate={handleRegenerate} onEditSubmit={handleEditSubmit} isNewAssistant={false} sessionId={sessionId} onAnswerSubmitted={handleChatSubmit} />;
                   })}
                   
                   {/* PREMIUM LOADING STATE */}
                   {loading && !isTyping && (
                     <div className="flex w-full items-start animate-in fade-in slide-in-from-bottom-2 duration-300">
-                      <div className="flex items-center gap-3 text-zinc-500 bg-white dark:bg-[#0c0c0e] px-5 py-4 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm w-fit">
-                        <Loader2 className="animate-spin text-blue-500" size={18} /> 
-                        <span className="font-google-sans text-[14px] font-bold text-zinc-700 dark:text-zinc-300">Processing...</span>
+                      <div className="flex items-center gap-2.5 text-zinc-500 bg-white dark:bg-[#0c0c0e] px-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm w-fit">
+                        <Loader2 className="animate-spin text-blue-500" size={16} /> 
+                        <span className="font-google-sans text-[12px] font-bold text-zinc-700 dark:text-zinc-300">Processing...</span>
                       </div>
                     </div>
                   )}
 
-                  <div className="h-[200px] sm:h-[240px]" />
+                  <div className="h-[180px] sm:h-[220px]" />
                 </div>
               </div>
               
               {/* FIXED BOTTOM PROMPT BAR WRAPPER */}
-              <div className="absolute bottom-0 left-0 right-0 z-30 p-4 sm:p-6 bg-gradient-to-t from-[#fafafa] via-[#fafafa] dark:from-[#050505] dark:via-[#050505] to-transparent pt-24 pointer-events-none">
+              <div className="absolute bottom-0 left-0 right-0 z-30 p-3 sm:p-5 bg-gradient-to-t from-[#fafafa] via-[#fafafa] dark:from-[#050505] dark:via-[#050505] to-transparent pt-20 pointer-events-none">
                 <ActivePromptBar onSubmit={handleChatSubmit} onStop={handleStop} loading={loading} isTyping={isTyping} />
               </div>
             </>
