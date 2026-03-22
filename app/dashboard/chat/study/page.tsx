@@ -30,23 +30,28 @@ import {
 
 const supabase = createClient()
 
+// In-memory cache to survive ReactMarkdown arbitrary component remounts during active chat session
+const temporaryQuizSessionCache: Record<string, { selected: Record<number, number>, submitted: boolean }> = {};
+
 // ==========================================
 // 1. QUIZ WIDGET (STRICTLY NO LOCAL STORAGE FOR STATE)
 // ==========================================
 export const QuizWidget = ({ topic, questions, question, options, correctIndex, explanation, onAnswerSubmitted, sessionId, isHistorical }: any) => {
   const quizList = questions || [{ question, options, correctIndex, explanation }];
+  const uniqueQuizKey = `${sessionId}-${quizList[0]?.question?.substring(0, 30)}`;
 
-  const [selectedMap, setSelectedMap] = useState<Record<number, number>>({});
-  const [submitted, setSubmitted] = useState(false);
+  const [selectedMap, setSelectedMap] = useState<Record<number, number>>(() => temporaryQuizSessionCache[uniqueQuizKey]?.selected || {});
+  const [submitted, setSubmitted] = useState(() => temporaryQuizSessionCache[uniqueQuizKey]?.submitted || false);
   const [saving, setSaving] = useState(false);
 
-  // 🚀 ONLY lock the quiz if it's an OLD message loaded from the Supabase Database.
+  // 🚀 ONLY lock the quiz if it's an OLD message loaded from the Supabase Database AND isn't in current session cache.
+  // NO LOCAL STORAGE CACHING.
   useEffect(() => {
-    if (isHistorical && !submitted) {
+    if (isHistorical && !submitted && !temporaryQuizSessionCache[uniqueQuizKey]?.submitted) {
       setSelectedMap(quizList.reduce((acc: any, _: any, i: number) => ({...acc, [i]: quizList[i].correctIndex}), {}));
       setSubmitted(true);
     }
-  }, [isHistorical, quizList, submitted]);
+  }, [isHistorical, quizList, submitted, uniqueQuizKey]);
 
   const isAllAnswered = Object.keys(selectedMap).length === quizList.length;
 
@@ -54,6 +59,10 @@ export const QuizWidget = ({ topic, questions, question, options, correctIndex, 
     if (!isAllAnswered || submitted || isHistorical) return;
     setSaving(true);
     
+    // Save to cache before remount happens
+    temporaryQuizSessionCache[uniqueQuizKey] = { selected: selectedMap, submitted: true };
+    setSubmitted(true);
+
     let score = 0;
     quizList.forEach((q: any, i: number) => {
       if (selectedMap[i] === q.correctIndex) score++;
@@ -169,8 +178,8 @@ export const QuizWidget = ({ topic, questions, question, options, correctIndex, 
                         {opt}
                       </ReactMarkdown>
                     </div>
-                    {submitted && i === q.correctIndex && <CheckCircle2 size={16} className="text-emerald-500 ml-auto shrink-0 hidden sm:block" />}
-                    {submitted && i === selectedMap[qIndex] && i !== q.correctIndex && <X size={16} className="text-red-500 ml-auto shrink-0 hidden sm:block" />}
+                    {submitted && i === q.correctIndex && <CheckCircle2 size={16} className="text-emerald-500 ml-auto shrink-0" />}
+                    {submitted && i === selectedMap[qIndex] && i !== q.correctIndex && <X size={16} className="text-red-500 ml-auto shrink-0" />}
                   </button>
                 )
               })}
@@ -1120,6 +1129,7 @@ export default function StudyChatPage() {
         .prose table {
           display: block !important;
           overflow-x: auto !important;
+          max-width: 100% !important;
         }
         
         .prose a {
@@ -1139,11 +1149,14 @@ export default function StudyChatPage() {
           padding-bottom: 0.5rem !important;
           scrollbar-width: thin !important;
           max-width: 100% !important;
+          display: block !important;
         }
         .katex {
           white-space: normal !important;
           word-wrap: break-word !important;
           overflow-wrap: anywhere !important;
+          max-width: 100% !important;
+          display: inline-block !important;
         }
         .katex-display::-webkit-scrollbar {
           height: 6px;
