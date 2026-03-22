@@ -38,35 +38,6 @@ export async function renameStudySession(id: string, title: string) {
   await supabaseAdmin.from('study_sessions').update({ title }).eq('id', id);
 }
 
-// --- NEW: Secure Server Action to Store Quiz Results ---
-export async function saveQuizResult(
-  sessionId: string,
-  topic: string,
-  question: string,
-  isCorrect: boolean
-) {
-  const supabaseAuth = await createServerClient();
-  const { data: { user } } = await supabaseAuth.auth.getUser();
-  if (!user) throw new Error("Unauthorized");
-
-  const { error } = await supabaseAdmin
-    .from('study_quiz_results')
-    .insert({
-      session_id: sessionId,
-      user_id: user.id,
-      topic: topic || 'General Concept',
-      question: question,
-      is_correct: isCorrect
-    });
-
-  if (error) {
-    console.error("Failed to save quiz result:", error);
-    throw new Error("Database insertion failed");
-  }
-
-  return { success: true };
-}
-
 export async function sendStudyMessage(
   sessionId: string | null, 
   content: string, 

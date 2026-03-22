@@ -4,10 +4,10 @@ import * as React from 'react'
 import Link from 'next/link'
 import { Navbar } from '@/components/landing/navbar'
 import { Footer } from '@/components/landing/footer'
-import { Brain, Map, BookOpen, Rss, MessageSquareHeart, Zap, ArrowRight } from "lucide-react"
+import { Brain, BookOpen, Rss, MessageSquareHeart, Zap, ArrowRight } from "lucide-react"
 
 export default function FeaturesPage() {
-  // Enhanced features array with Bento-box span rules and dynamic, color-coded themes
+  // Restructured for a 5-item bento grid with a cohesive Blue/Cyan/Indigo theme
   const features = [
     { 
       title: 'General Assistant', 
@@ -20,34 +20,24 @@ export default function FeaturesPage() {
       glow: 'hover:border-blue-400 dark:hover:border-blue-500/50 hover:shadow-[0_20px_50px_rgba(37,99,235,0.15)]'
     },
     { 
-      title: 'Roadmap Architect', 
-      desc: 'Turn vague goals into clear, actionable execution paths. Define where you want to go—the system maps out exactly how to get there week by week.',
-      icon: <Map size={28} />,
-      watermark: <Map size={240} />,
-      colSpan: 'md:col-span-1',
-      color: 'text-indigo-500',
-      bg: 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-100 dark:border-indigo-500/20',
-      glow: 'hover:border-indigo-400 dark:hover:border-indigo-500/50 hover:shadow-[0_20px_50px_rgba(99,102,241,0.15)]'
-    },
-    { 
       title: 'Neural Study Buddy', 
       desc: 'Understand deeply. Master faster. Ask difficult academic questions and get step-by-step explanations that actually stick in your memory.',
       icon: <BookOpen size={28} />,
       watermark: <BookOpen size={240} />,
       colSpan: 'md:col-span-1',
-      color: 'text-emerald-500',
-      bg: 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20',
-      glow: 'hover:border-emerald-400 dark:hover:border-emerald-500/50 hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)]'
+      color: 'text-sky-500',
+      bg: 'bg-sky-50 dark:bg-sky-500/10 border-sky-100 dark:border-sky-500/20',
+      glow: 'hover:border-sky-400 dark:hover:border-sky-500/50 hover:shadow-[0_20px_50px_rgba(14,165,233,0.15)]'
     },
     { 
       title: 'Live Intelligence Feed', 
       desc: 'Real-time insights across education, technology, and industry. Stay current—the platform searches the web and surfaces what is relevant to you automatically.',
       icon: <Rss size={28} />,
       watermark: <Rss size={240} />,
-      colSpan: 'md:col-span-2',
-      color: 'text-cyan-500',
-      bg: 'bg-cyan-50 dark:bg-cyan-500/10 border-cyan-100 dark:border-cyan-500/20',
-      glow: 'hover:border-cyan-400 dark:hover:border-cyan-500/50 hover:shadow-[0_20px_50px_rgba(6,182,212,0.15)]'
+      colSpan: 'md:col-span-1',
+      color: 'text-indigo-500',
+      bg: 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-100 dark:border-indigo-500/20',
+      glow: 'hover:border-indigo-400 dark:hover:border-indigo-500/50 hover:shadow-[0_20px_50px_rgba(99,102,241,0.15)]'
     },
     { 
       title: 'Community Feedback', 
@@ -55,19 +45,19 @@ export default function FeaturesPage() {
       icon: <MessageSquareHeart size={28} />,
       watermark: <MessageSquareHeart size={240} />,
       colSpan: 'md:col-span-2',
-      color: 'text-purple-500',
-      bg: 'bg-purple-50 dark:bg-purple-500/10 border-purple-100 dark:border-purple-500/20',
-      glow: 'hover:border-purple-400 dark:hover:border-purple-500/50 hover:shadow-[0_20px_50px_rgba(168,85,247,0.15)]'
+      color: 'text-cyan-500',
+      bg: 'bg-cyan-50 dark:bg-cyan-500/10 border-cyan-100 dark:border-cyan-500/20',
+      glow: 'hover:border-cyan-400 dark:hover:border-cyan-500/50 hover:shadow-[0_20px_50px_rgba(6,182,212,0.15)]'
     },
     { 
       title: 'Seamless Execution', 
       desc: 'Swipe. Select. Execute. Everything you need is one interaction away—no friction, no clutter. Just absolute clarity and speed.',
       icon: <Zap size={28} />,
       watermark: <Zap size={240} />,
-      colSpan: 'md:col-span-1',
-      color: 'text-amber-500',
-      bg: 'bg-amber-50 dark:bg-amber-500/10 border-amber-100 dark:border-amber-500/20',
-      glow: 'hover:border-amber-400 dark:hover:border-amber-500/50 hover:shadow-[0_20px_50px_rgba(245,158,11,0.15)]'
+      colSpan: 'md:col-span-3', // Spans the full width at the bottom to anchor the grid beautifully
+      color: 'text-blue-400',
+      bg: 'bg-slate-50 dark:bg-blue-900/10 border-slate-200 dark:border-blue-800/30',
+      glow: 'hover:border-blue-400 dark:hover:border-blue-500/50 hover:shadow-[0_20px_50px_rgba(37,99,235,0.15)]'
     }
   ]
 
@@ -83,11 +73,11 @@ export default function FeaturesPage() {
 
       <div className="min-h-screen font-outfit bg-[#fafafa] dark:bg-[#050505] text-zinc-900 dark:text-zinc-100 tracking-tight antialiased flex flex-col relative overflow-hidden">
         
-        {/* Ambient Background Grid & Multi-Glows */}
+        {/* Ambient Background Grid & Multi-Glows (Switched to Blue tones) */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#18181b_1px,transparent_1px),linear-gradient(to_bottom,#18181b_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_100%_at_50%_0%,#000_70%,transparent_100%)] -z-10 opacity-60 dark:opacity-80" />
         
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-500/10 dark:bg-blue-600/15 rounded-full blur-[150px] pointer-events-none -z-10 animate-pulse duration-[4000ms]" />
-        <div className="absolute top-[40%] left-0 w-[500px] h-[500px] bg-emerald-500/10 dark:bg-emerald-600/10 rounded-full blur-[150px] pointer-events-none -z-10" />
+        <div className="absolute top-[40%] left-0 w-[500px] h-[500px] bg-sky-500/10 dark:bg-sky-600/10 rounded-full blur-[150px] pointer-events-none -z-10" />
 
         <Navbar />
         

@@ -20,20 +20,20 @@ export default function HowItWorksPage() {
     {
       number: '02',
       title: 'Pick the right assistant.',
-      description: 'Choose the specific tool you need for your current task. Need to plan your next four years of college? Use the Career Planner. Struggling to understand a difficult math concept? Switch over to the Study Buddy. As you chat, our system silently searches the live internet to make sure your answers are always based on today’s facts.',
-      icon: <Zap size={36} className="text-indigo-500" />,
-      nodeIcon: <MessageSquare size={20} className="text-indigo-500" />,
-      gradient: 'from-indigo-600 to-purple-500',
-      glow: 'group-hover:shadow-[0_0_40px_rgba(99,102,241,0.2)]'
+      description: 'Choose the specific tool you need for your current task. Struggling to understand a difficult math concept? Switch over to the Study Buddy. Need your CV optimized for ATS? Use the Resume Specialist. As you chat, our system silently searches the live internet to make sure your answers are always based on today’s facts.',
+      icon: <Zap size={36} className="text-sky-500" />,
+      nodeIcon: <MessageSquare size={20} className="text-sky-500" />,
+      gradient: 'from-sky-500 to-blue-500',
+      glow: 'group-hover:shadow-[0_0_40px_rgba(14,165,233,0.2)]'
     },
     {
       number: '03',
       title: 'Get clear, ready-to-use answers.',
       description: 'We do the heavy lifting so you do not have to. Instead of giving you a giant, confusing wall of text, we organize your answers into neat tables, step-by-step lists, and clear bullet points. Everything is built to help you stop reading and start taking action immediately.',
-      icon: <Target size={36} className="text-emerald-500" />,
-      nodeIcon: <CheckCircle size={20} className="text-emerald-500" />,
-      gradient: 'from-emerald-500 to-teal-400',
-      glow: 'group-hover:shadow-[0_0_40px_rgba(16,185,129,0.2)]'
+      icon: <Target size={36} className="text-cyan-500" />,
+      nodeIcon: <CheckCircle size={20} className="text-cyan-500" />,
+      gradient: 'from-cyan-500 to-blue-400',
+      glow: 'group-hover:shadow-[0_0_40px_rgba(6,182,212,0.2)]'
     }
   ]
 
@@ -53,7 +53,7 @@ export default function HowItWorksPage() {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#18181b_1px,transparent_1px),linear-gradient(to_bottom,#18181b_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_100%_at_50%_0%,#000_70%,transparent_100%)] -z-10 opacity-60 dark:opacity-80" />
         
         <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-blue-500/10 dark:bg-blue-600/15 rounded-full blur-[150px] pointer-events-none -z-10 animate-pulse duration-[4000ms]" />
-        <div className="absolute top-[40%] right-0 w-[500px] h-[500px] bg-indigo-500/10 dark:bg-indigo-600/10 rounded-full blur-[150px] pointer-events-none -z-10" />
+        <div className="absolute top-[40%] right-0 w-[500px] h-[500px] bg-sky-500/10 dark:bg-sky-600/10 rounded-full blur-[150px] pointer-events-none -z-10" />
 
         <Navbar />
 
@@ -67,7 +67,7 @@ export default function HowItWorksPage() {
               </div>
               <h1 className="font-google-sans text-5xl sm:text-6xl md:text-7xl font-extrabold text-zinc-900 dark:text-white tracking-tight mb-6 leading-[1.05]">
                 Simple steps. <br className="md:hidden" />
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-500 dark:from-blue-400 dark:to-indigo-400">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-500 dark:from-blue-400 dark:to-cyan-400">
                   Powerful results.
                 </span>
               </h1>
