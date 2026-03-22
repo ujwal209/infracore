@@ -3,6 +3,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/utils/supabase/server";
 
+// Admin client bypasses RLS for guaranteed database operations
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -111,4 +112,47 @@ export async function sendStudyMessage(
   await supabaseAdmin.from('study_sessions').update({ updated_at: new Date().toISOString() }).eq('id', currentSessionId);
 
   return { sessionId: currentSessionId, content: finalContent };
+}
+
+// ✅ UPGRADED: Using supabaseAdmin for reliable DB insertion
+export async function saveQuizResult(data: {
+  session_id: string;
+  topic: string;
+  score: number;
+  total_questions: number;
+  quiz_data: any;
+}) {
+  const supabaseAuth = await createServerClient();
+  const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+  
+  if (authError || !user) throw new Error("Unauthorized");
+
+  const { error } = await supabaseAdmin.from('study_quiz_results').insert({
+    user_id: user.id,
+    session_id: data.session_id,
+    topic: data.topic,
+    score: data.score,
+    total_questions: data.total_questions,
+    quiz_data: data.quiz_data
+  });
+
+  if (error) throw error;
+  return { success: true };
+}
+
+// ✅ UPGRADED: Using supabaseAdmin for reliable DB fetching
+export async function getQuizHistory() {
+  const supabaseAuth = await createServerClient();
+  const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+  
+  if (authError || !user) return [];
+
+  const { data, error } = await supabaseAdmin
+    .from('study_quiz_results')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
 }
