@@ -194,7 +194,7 @@ export const ProgressWidget = ({ topic, masteryPercentage, completedConcepts, ne
   const offset = arc - (percentage / 100) * arc;
 
   return (
-    <div className="my-6 p-5 sm:p-6 rounded-[1.5rem] bg-gradient-to-br from-blue-500/5 to-indigo-500/5 border border-blue-200/50 dark:border-blue-900/50 w-full max-w-full sm:max-w-xl font-outfit shadow-xl shadow-blue-500/5 overflow-hidden">
+    <div className="my-6 p-5 sm:p-6 rounded-[1.5rem] bg-white dark:bg-[#0c0c0e] border border-zinc-200 dark:border-zinc-800/80 w-full max-w-full sm:max-w-xl font-outfit shadow-sm overflow-hidden">
       <div className="flex items-center justify-between mb-6 sm:mb-8">
         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
           <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
@@ -468,18 +468,22 @@ export const RunnableCodeBlock = ({ lang, text }: { lang: string, text: string }
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setIsModalOpen(false)}>
           <div className="relative w-full max-w-6xl h-full max-h-[95vh] bg-[#0c0c0e] border border-zinc-800 rounded-2xl flex flex-col shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800/80 bg-[#111113] rounded-t-2xl shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+            <div className="flex items-center justify-between px-3 sm:px-4 py-3 border-b border-zinc-800/80 bg-[#111113] rounded-t-2xl shrink-0 gap-2">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
                   <Play size={14} className="text-blue-400" fill="currentColor" />
                 </div>
-                <div>
-                  <h3 className="font-google-sans text-[13px] sm:text-[14px] font-bold text-white tracking-wide">Live Console Execution</h3>
-                  <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-widest">Compiler (Judge0 Engine)</p>
+                <div className="min-w-0">
+                  <h3 className="font-google-sans text-[13px] sm:text-[14px] font-bold text-white tracking-wide truncate">Live Console Execution</h3>
+                  <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-widest truncate hidden xs:block">Compiler (Judge0 Engine)</p>
                 </div>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="p-2 bg-zinc-800/50 hover:bg-zinc-700 text-white rounded-xl transition-colors border border-zinc-700/50">
-                <X size={16} />
+              <button 
+                onClick={() => setIsModalOpen(false)} 
+                className="shrink-0 flex items-center justify-center w-8 h-8 sm:w-auto sm:h-auto sm:gap-1.5 sm:px-3 sm:py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white font-google-sans text-[12px] font-bold uppercase tracking-wider rounded-lg transition-colors border border-zinc-700"
+              >
+                <X size={16} className="sm:w-[14px] sm:h-[14px]" /> 
+                <span className="hidden sm:inline">Close</span>
               </button>
             </div>
             

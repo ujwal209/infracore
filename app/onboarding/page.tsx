@@ -237,6 +237,7 @@ export default function OnboardingPage() {
   const [error, setError] = React.useState<string | null>(null)
   const [avatarUrl, setAvatarUrl] = React.useState<string>('')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
+  const [role, setRole] = React.useState<'student' | 'professional'>('student')
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -462,16 +463,24 @@ export default function OnboardingPage() {
                     </div>
                   </div>
 
-                  {/* Section 2: Academic Intel */}
+                  {/* Section 2: Career Stage Matrix */}
                   <div className="space-y-6">
                     <div className="flex items-center gap-3 border-b border-zinc-100 dark:border-zinc-800/80 pb-4">
                       <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center border border-zinc-200 dark:border-zinc-800">
                           <GraduationCap className="text-blue-600 dark:text-blue-400" size={16} />
                       </div>
-                      <h3 className="font-google-sans text-[13px] font-bold uppercase tracking-wider text-zinc-900 dark:text-white">2. Academic Matrix</h3>
+                      <h3 className="font-google-sans text-[13px] font-bold uppercase tracking-wider text-zinc-900 dark:text-white">2. Career Stage Matrix</h3>
                     </div>
+
+                    <div className="flex bg-zinc-100 dark:bg-zinc-900 p-1.5 rounded-2xl border border-zinc-200 dark:border-zinc-800/80">
+                      <button type="button" onClick={() => setRole('student')} className={`flex-1 py-3 text-sm font-google-sans font-bold rounded-xl transition-all ${role === 'student' ? 'bg-white dark:bg-[#111113] text-blue-600 shadow-sm border border-zinc-200/50 dark:border-zinc-700/50' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}>University Student</button>
+                      <button type="button" onClick={() => setRole('professional')} className={`flex-1 py-3 text-sm font-google-sans font-bold rounded-xl transition-all ${role === 'professional' ? 'bg-white dark:bg-[#111113] text-blue-600 shadow-sm border border-zinc-200/50 dark:border-zinc-700/50' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}>Working Professional</button>
+                    </div>
+
+                    <input type="hidden" name="role" value={role} />
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+                    {role === 'student' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 animate-in fade-in zoom-in-95">
                       <div className="md:col-span-2">
                         <label className="font-google-sans text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2 block pl-1">Institution</label>
                         <LiveApiSingleSelect 
@@ -511,6 +520,7 @@ export default function OnboardingPage() {
                         </div>
                       </div>
                     </div>
+                    )}
                   </div>
 
                   {/* Section 3: Technical Arsenal */}

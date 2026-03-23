@@ -33,47 +33,11 @@ interface NotificationItem {
   message: string
   time: string
   unread: boolean
-  icon: React.ReactNode
-  bg: string
   link: string
 }
 
-// Static System Notification
-const SYSTEM_NOTIFICATION: NotificationItem = {
-  id: 'sys-1',
-  title: 'System Update',
-  message: 'New deep search capabilities have been added to Vishwa AI.',
-  time: 'Recently',
-  unread: false,
-  icon: <MessageSquare size={16} className="text-violet-600 dark:text-violet-400" />,
-  bg: 'bg-violet-100 dark:bg-violet-500/20',
-  link: '/news'
-}
-
 // Default payload injected if DB is empty
-const DEFAULT_LOCAL_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: '1',
-    title: 'Resume Learning',
-    message: 'Continue from where you left off in "Electric Charges and Fields".',
-    time: 'Just now',
-    unread: true,
-    icon: <BookOpen size={16} className="text-blue-600 dark:text-blue-400" />,
-    bg: 'bg-blue-100 dark:bg-blue-500/20',
-    link: '/dashboard/chat/study' // ✅ Fixed Route
-  },
-  {
-    id: '2',
-    title: 'Quiz Mastered!',
-    message: 'You scored 5/5 on Linear Algebra. Great job!',
-    time: '2 hours ago',
-    unread: true,
-    icon: <Sparkles size={16} className="text-emerald-600 dark:text-emerald-400" />,
-    bg: 'bg-emerald-100 dark:bg-emerald-500/20',
-    link: '/dashboard/chat/study' // ✅ Fixed Route
-  },
-  SYSTEM_NOTIFICATION
-]
+const DEFAULT_LOCAL_NOTIFICATIONS: NotificationItem[] = []
 
 // Helper to format time nicely
 function timeSince(dateString: string) {
@@ -130,21 +94,13 @@ export function DashboardNavbar({ userEmail, avatarUrl }: DashboardNavbarProps) 
         if (history && history.length > 0) {
           // Take the top 3 most recent quizzes and format them into notifications
           const dynamicNotifs: NotificationItem[] = history.slice(0, 3).map((record: any) => {
-            const percentage = (record.score / record.total_questions) * 100;
-            
-            // Determine styling based on score
             let title = 'Assessment Graded';
-            let icon = <BookOpen size={16} className="text-blue-600 dark:text-blue-400" />;
-            let bgClass = 'bg-blue-100 dark:bg-blue-500/20';
+            const percentage = (record.score / record.total_questions) * 100;
 
             if (percentage === 100) {
-              title = 'Perfect Score! 🏆';
-              icon = <Sparkles size={16} className="text-emerald-600 dark:text-emerald-400" />;
-              bgClass = 'bg-emerald-100 dark:bg-emerald-500/20';
+              title = 'Perfect Score!';
             } else if (percentage < 60) {
               title = 'Review Recommended';
-              icon = <Target size={16} className="text-red-600 dark:text-red-400" />;
-              bgClass = 'bg-red-100 dark:bg-red-500/20';
             }
 
             return {
@@ -153,14 +109,11 @@ export function DashboardNavbar({ userEmail, avatarUrl }: DashboardNavbarProps) 
               message: `You scored ${record.score}/${record.total_questions} on "${record.topic}".`,
               time: timeSince(record.created_at),
               unread: true, // New fetched items start unread
-              icon: icon,
-              bg: bgClass,
               link: '/dashboard/chat/study' // ✅ Fixed Route
             };
           });
 
-          // Combine with system notification
-          setNotifications([...dynamicNotifs, SYSTEM_NOTIFICATION]);
+          setNotifications(dynamicNotifs);
         } else {
           // Fallback if no history yet
           setNotifications(DEFAULT_LOCAL_NOTIFICATIONS);
@@ -213,7 +166,7 @@ export function DashboardNavbar({ userEmail, avatarUrl }: DashboardNavbarProps) 
         .font-google-sans { font-family: 'Google Sans', sans-serif !important; }
       `}} />
 
-      <header className="h-[64px] sm:h-[72px] flex items-center justify-between px-4 sm:px-6 lg:px-8 bg-white/80 dark:bg-[#050505]/80 backdrop-blur-2xl border-b border-zinc-200/80 dark:border-zinc-800/80 shrink-0 z-40 transition-colors duration-300 sticky top-0 font-outfit">
+      <header className="h-[64px] sm:h-[72px] flex items-center justify-between px-4 sm:px-6 lg:px-8 bg-white dark:bg-[#0c0c0e] border-b border-zinc-200 dark:border-zinc-800 shrink-0 z-40 relative transition-colors duration-300 sticky top-0 font-outfit">
         
         <div className="flex items-center gap-4">
           <button 
@@ -310,15 +263,13 @@ export function DashboardNavbar({ userEmail, avatarUrl }: DashboardNavbarProps) 
                             : 'hover:bg-zinc-50 dark:hover:bg-[#111113]'
                           }`}
                         >
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${notif.bg}`}>
-                            {notif.icon}
-                          </div>
+                          <div className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ${notif.unread ? 'bg-zinc-800 dark:bg-zinc-200' : 'bg-transparent'}`} />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-2 mb-1">
                               <h4 className={`text-[14px] truncate ${notif.unread ? 'font-bold text-zinc-900 dark:text-white' : 'font-semibold text-zinc-700 dark:text-zinc-300'}`}>
                                 {notif.title}
                               </h4>
-                              {notif.unread && <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />}
+                              {notif.unread && <span className="w-1.5 h-1.5 rounded-full bg-zinc-800 dark:bg-zinc-200 shrink-0" />}
                             </div>
                             <p className="text-[13px] text-zinc-500 dark:text-zinc-400 leading-relaxed line-clamp-2">
                               {notif.message}
@@ -351,9 +302,6 @@ export function DashboardNavbar({ userEmail, avatarUrl }: DashboardNavbarProps) 
               <span className="font-google-sans text-[13px] font-bold text-zinc-900 dark:text-zinc-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                 {userEmail?.split('@')[0] || 'Operator'}
               </span>
-              <span className="font-outfit text-[10px] font-semibold uppercase tracking-[0.1em] text-emerald-600 dark:text-emerald-500">
-                Active Session
-              </span>
             </div>
 
             <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden border border-zinc-200 dark:border-zinc-700/80 shrink-0 bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center group-hover:ring-2 group-hover:ring-blue-500/30 transition-all duration-300 shadow-sm">
@@ -368,6 +316,19 @@ export function DashboardNavbar({ userEmail, avatarUrl }: DashboardNavbarProps) 
               )}
             </div>
           </Link>
+
+          {/* Desktop Sign Out */}
+          <div className="hidden sm:block">
+            <form action={logoutAction}>
+              <button 
+                type="submit" 
+                className="p-2 ml-1 text-zinc-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all outline-none"
+                title="Sign Out"
+              >
+                <LogOut size={18} />
+              </button>
+            </form>
+          </div>
         </div>
       </header>
 

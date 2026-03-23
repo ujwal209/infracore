@@ -4,8 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { DashboardNavbar } from '@/components/dashboard/dashboard-navbar'
 import { getStudentProfile, updateStudentProfile } from '@/app/actions/profile'
 import { 
-  User, School, Target, Cpu, Save, 
-  Loader2, Camera, Sparkles, CheckCircle2, Search, X
+  User, Loader2, Camera, Search, X
 } from 'lucide-react'
 
 // ============================================================================
@@ -197,11 +196,15 @@ export default function StudentProfile() {
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [role, setRole] = useState<'student' | 'professional'>('student');
 
   useEffect(() => {
     async function init() {
       const data = await getStudentProfile();
-      if (data) setProfile(data);
+      if (data) {
+        setProfile(data);
+        setRole(data.college_name || data.degree ? 'student' : 'professional');
+      }
       setLoading(false);
     }
     init();
@@ -308,9 +311,6 @@ export default function StudentProfile() {
 
             {/* HERO CARD - Premium Dark Theme */}
             <div className="bg-zinc-900 dark:bg-[#111113] rounded-3xl p-8 sm:p-10 text-white shadow-md relative overflow-hidden border border-zinc-800/80">
-              <div className="absolute -top-10 -right-10 p-8 opacity-[0.02] rotate-12 pointer-events-none text-blue-400"><Cpu size={250}/></div>
-              <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/10 to-transparent pointer-events-none" />
-
               <div className="relative flex flex-col sm:flex-row items-center sm:items-center gap-8 sm:gap-10 z-10">
                 
                 {/* Avatar Upload */}
@@ -334,20 +334,22 @@ export default function StudentProfile() {
                 <div className="text-center sm:text-left space-y-3 flex-1">
                   <div className="flex items-center gap-2 justify-center sm:justify-start">
                     <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">{profile?.full_name || 'New Operator'}</h2>
-                    <Sparkles className="text-blue-400 shrink-0 hidden sm:block" size={20} />
                   </div>
                   <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
-                    <span className="px-3 py-1 bg-zinc-800 rounded-md text-[13px] font-bold text-zinc-300">
-                      {profile?.degree || 'Degree Not Set'}
-                    </span>
-                    <span className="px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-md text-[13px] font-bold text-blue-400">
-                      Semester {profile?.current_semester || '?'}
-                    </span>
+                    <select 
+                      value={role} 
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setRole(e.target.value as 'student' | 'professional')}
+                      className="px-3 py-1.5 bg-zinc-800 rounded-md text-[13px] font-bold text-white border border-zinc-700 focus:border-blue-500 outline-none cursor-pointer"
+                    >
+                      <option value="student">University Student</option>
+                      <option value="professional">Working Professional</option>
+                    </select>
                   </div>
-                  <p className="text-[14px] text-zinc-400 font-medium flex items-center justify-center sm:justify-start gap-1.5">
-                     <School size={14} className="text-blue-400" />
-                     {profile?.college_name || 'Institution Pending'}
-                  </p>
+                  {role === 'student' && (
+                    <p className="text-[14px] text-zinc-400 font-medium flex items-center justify-center sm:justify-start gap-1.5">
+                       {profile?.college_name || 'Institution Pending'}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -387,54 +389,56 @@ export default function StudentProfile() {
                 </section>
 
                 {/* Institution Data */}
-                <section className="bg-white dark:bg-[#111113] p-8 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm space-y-6">
-                  <div className="border-b border-zinc-100 dark:border-zinc-800/60 pb-4">
-                    <h3 className="text-[16px] font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                      <School size={18} className="text-blue-600 dark:text-blue-500" /> Academic Profile
-                    </h3>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="md:col-span-2">
-                      <label className="block text-[13px] font-bold text-zinc-600 dark:text-zinc-400 mb-2 pl-1">University / College</label>
-                      <AutocompleteSingle 
-                        name="college_name" 
-                        initialValue={profile?.college_name} 
-                        placeholder="Search for your university..." 
-                        fetcher={fetchUniversities}
-                        icon={Search}
-                      />
+                {role === 'student' && (
+                  <section className="bg-white dark:bg-[#111113] p-8 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm space-y-6">
+                    <div className="border-b border-zinc-100 dark:border-zinc-800/60 pb-4">
+                      <h3 className="text-[16px] font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                        Academic Profile
+                      </h3>
                     </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-[13px] font-bold text-zinc-600 dark:text-zinc-400 mb-2 pl-1">Degree Title</label>
-                      <AutocompleteSingle 
-                        name="degree" 
-                        initialValue={profile?.degree} 
-                        placeholder="Search or type degree..." 
-                        fetcher={fetchDegrees}
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="md:col-span-2">
+                        <label className="block text-[13px] font-bold text-zinc-600 dark:text-zinc-400 mb-2 pl-1">University / College</label>
+                        <AutocompleteSingle 
+                          name="college_name" 
+                          initialValue={profile?.college_name} 
+                          placeholder="Search for your university..." 
+                          fetcher={fetchUniversities}
+                          icon={Search}
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-[13px] font-bold text-zinc-600 dark:text-zinc-400 mb-2 pl-1">Degree Title</label>
+                        <AutocompleteSingle 
+                          name="degree" 
+                          initialValue={profile?.degree} 
+                          placeholder="Search or type degree..." 
+                          fetcher={fetchDegrees}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[13px] font-bold text-zinc-600 dark:text-zinc-400 mb-2 pl-1">Graduation Year</label>
+                        <input 
+                          name="graduation_year" 
+                          type="number" 
+                          defaultValue={profile?.graduation_year} 
+                          placeholder="e.g. 2026" 
+                          className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 px-4 py-3 rounded-xl text-[15px] font-medium outline-none transition-all placeholder:text-zinc-400 text-zinc-900 dark:text-zinc-100 shadow-sm" 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[13px] font-bold text-zinc-600 dark:text-zinc-400 mb-2 pl-1">Current Semester</label>
+                        <input 
+                          name="current_semester" 
+                          type="number" 
+                          defaultValue={profile?.current_semester} 
+                          placeholder="e.g. 6" 
+                          className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 px-4 py-3 rounded-xl text-[15px] font-medium outline-none transition-all placeholder:text-zinc-400 text-zinc-900 dark:text-zinc-100 shadow-sm" 
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-[13px] font-bold text-zinc-600 dark:text-zinc-400 mb-2 pl-1">Graduation Year</label>
-                      <input 
-                        name="graduation_year" 
-                        type="number" 
-                        defaultValue={profile?.graduation_year} 
-                        placeholder="e.g. 2026" 
-                        className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 px-4 py-3 rounded-xl text-[15px] font-medium outline-none transition-all placeholder:text-zinc-400 text-zinc-900 dark:text-zinc-100 shadow-sm" 
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[13px] font-bold text-zinc-600 dark:text-zinc-400 mb-2 pl-1">Current Semester</label>
-                      <input 
-                        name="current_semester" 
-                        type="number" 
-                        defaultValue={profile?.current_semester} 
-                        placeholder="e.g. 6" 
-                        className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 px-4 py-3 rounded-xl text-[15px] font-medium outline-none transition-all placeholder:text-zinc-400 text-zinc-900 dark:text-zinc-100 shadow-sm" 
-                      />
-                    </div>
-                  </div>
-                </section>
+                  </section>
+                )}
               </div>
 
               {/* RIGHT COLUMN: Career Vector */}
@@ -442,7 +446,7 @@ export default function StudentProfile() {
                 <section className="bg-white dark:bg-[#111113] p-8 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm space-y-6">
                   <div className="border-b border-zinc-100 dark:border-zinc-800/60 pb-4">
                     <h3 className="text-[16px] font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                      <Target size={18} className="text-blue-600 dark:text-blue-500" /> Career Goals
+                      Career Goals
                     </h3>
                   </div>
                   
@@ -482,9 +486,6 @@ export default function StudentProfile() {
 
                 {/* System Status Box */}
                 <div className="bg-blue-50/50 dark:bg-blue-500/5 border border-blue-100 dark:border-blue-500/20 rounded-3xl p-6 flex items-start gap-4 shadow-sm">
-                   <div className="w-10 h-10 bg-blue-100 dark:bg-blue-500/20 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
-                     <CheckCircle2 size={20} />
-                   </div>
                    <div>
                      <h4 className="text-[14px] font-bold text-zinc-900 dark:text-zinc-100 mb-1">Profile Synced</h4>
                      <p className="text-[13px] font-medium text-zinc-600 dark:text-zinc-400 leading-relaxed">
@@ -506,7 +507,7 @@ export default function StudentProfile() {
                 disabled={saving} 
                 className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl text-[14px] font-bold shadow-md shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-70 disabled:pointer-events-none"
               >
-                {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+                {saving && <Loader2 className="animate-spin" size={18} />}
                 {saving ? 'Saving...' : 'Save Profile'}
               </button>
             </div>

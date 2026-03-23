@@ -11,10 +11,10 @@ import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import Image from 'next/image'
 import { 
   Search, Menu, X, RefreshCw, Plus, Send, Edit3,
-  Trash2, Loader2, Check, PenLine, Globe, Zap, Square,
-  GraduationCap, ArrowRight, BrainCircuit, Target,
+  Trash2, Loader2, Check, PenLine, Square,
+  GraduationCap, ArrowRight, Target, Sparkles,
   History, Trophy, Calendar, XCircle, CheckCircle2, BarChart, CheckSquare, Square as SquareIcon,
-  BookOpen, Sparkles, Copy, Maximize2, Download, Search as SearchIcon
+  BookOpen, Copy, Maximize2, Download, Search as SearchIcon, ThumbsUp, ThumbsDown
 } from 'lucide-react'
 
 import { createClient } from '@/utils/supabase/client'
@@ -595,10 +595,10 @@ const QuizHistoryModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =>
                     return (
                       <tr key={record.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/30 transition-colors">
                         <td className="px-5 py-4"><p className="text-[14px] font-bold text-zinc-900 dark:text-zinc-100">{record.topic}</p><p className="text-[12px] text-zinc-500 mt-0.5">{record.total_questions} Questions Total</p></td>
-                        <td className="px-5 py-4 text-center"><span className="inline-flex items-center justify-center px-3 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 font-bold text-[14px]">{record.score} / {record.total_questions}</span></td>
+                        <td className="px-5 py-4 text-center"><span className="inline-flex items-center justify-center px-3 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold text-[14px]">{record.score} / {record.total_questions}</span></td>
                         <td className="px-5 py-4 text-center">
-                          {passed ? <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-[12px] font-bold"><CheckCircle2 size={14} /> Passed</span>
-                                  : <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-[12px] font-bold"><XCircle size={14} /> Review Needed</span>}
+                          {passed ? <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[12px] font-bold"><CheckCircle2 size={14} /> Passed</span>
+                                  : <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[12px] font-bold"><XCircle size={14} /> Review Needed</span>}
                         </td>
                         <td className="px-5 py-4 text-right text-[13px] font-medium text-zinc-600 dark:text-zinc-400 flex items-center justify-end gap-1.5"><Calendar size={14} className="text-zinc-400" />{new Date(record.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</td>
                       </tr>
@@ -742,13 +742,19 @@ const MessageItem = React.memo(({ m, index, isLast, loading, isTypingGlobal, isL
 
       {!isUser && isLast && !loading && !isTypingGlobal && (
         <div className="flex w-full justify-start mt-2">
-           <button onClick={() => onAnswerSubmitted("I understand this concept completely. Please update my progress tracker and immediately begin teaching the next topic in full, comprehensive detail right now.", true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white hover:bg-blue-500 transition-colors rounded-lg shadow-sm font-semibold text-[13px] active:scale-95">
+           <button onClick={() => onAnswerSubmitted("I understand this concept completely. I am ready to learn the very next topic on the roadmap in full, comprehensive detail right now.", true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white hover:bg-blue-500 transition-colors rounded-lg shadow-sm font-semibold text-[13px] active:scale-95">
              <CheckCircle2 size={15} /> <span>Mark as Done</span>
            </button>
         </div>
       )}
 
       <div className={`flex items-center gap-1.5 mt-1.5 ${isUser ? 'mr-1.5 justify-end' : 'ml-1.5 justify-start'}`}>
+        {!isUser && (
+          <div className="flex items-center gap-1 shrink-0 mr-1">
+            <button className="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800" title="Like response"><ThumbsUp size={14} className="mt-[-1px]" /></button>
+            <button className="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800" title="Dislike response"><ThumbsDown size={14} className="mt-[1px]" /></button>
+          </div>
+        )}
         <CopyButton text={m.content || ""} />
         {isUser && !loading && !isTypingGlobal && (
           <button onClick={() => setIsEditing(true)} className="flex items-center gap-1 px-2 py-1 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 shadow-sm" title="Edit prompt">
@@ -769,7 +775,7 @@ MessageItem.displayName = 'MessageItem';
 // ==========================================
 // 8. PROMPT BAR
 // ==========================================
-const ActivePromptBar = ({ onSubmit, onStop, loading, isTyping, setShowHistoryModal, webSearchMode, setWebSearchMode, deepThinkMode, setDeepThinkMode }: any) => {
+const ActivePromptBar = ({ onSubmit, onStop, loading, isTyping, setShowHistoryModal, currentProgress = 0 }: any) => {
   const [chatInput, setChatInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -825,17 +831,8 @@ const ActivePromptBar = ({ onSubmit, onStop, loading, isTyping, setShowHistoryMo
         </div>
 
         <div className="flex flex-wrap items-center gap-2 px-3 sm:px-4 py-2 border-t border-zinc-200 dark:border-zinc-800 bg-transparent overflow-x-auto scrollbar-hide">
-          <button type="button" onClick={() => setWebSearchMode(!webSearchMode)} disabled={loading || isTyping} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-google-sans text-[11px] font-bold transition-all shrink-0 disabled:opacity-50 ${webSearchMode ? 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800/50 text-blue-600 dark:text-blue-400' : 'border-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/60 text-zinc-500 dark:text-zinc-400'}`}>
-            <SearchIcon size={13} className={webSearchMode ? '' : 'opacity-70'} /> Web Search
-          </button>
-          <button type="button" onClick={() => setDeepThinkMode(!deepThinkMode)} disabled={loading || isTyping} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-google-sans text-[11px] font-bold transition-all shrink-0 disabled:opacity-50 ${deepThinkMode ? 'bg-indigo-50 border-indigo-200 dark:bg-indigo-900/20 dark:border-indigo-800/50 text-indigo-600 dark:text-indigo-400' : 'border-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/60 text-zinc-500 dark:text-zinc-400'}`}>
-            <BrainCircuit size={13} className={deepThinkMode ? '' : 'opacity-70'} /> Deep Think
-          </button>
-          
-          <div className="w-[1px] h-3 bg-zinc-200 dark:bg-zinc-700 mx-1 hidden sm:block"></div>
-          
           <button type="button" onClick={() => { if (!loading && !isTyping) { onSubmit("I'm ready to take a quick quiz on this concept."); } }} disabled={loading || isTyping} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/60 font-google-sans text-[11px] font-bold transition-all shrink-0 text-zinc-500 dark:text-zinc-400 disabled:opacity-50">
-            <CheckSquare size={13} className="text-pink-500" /> Take Quiz
+            <CheckSquare size={13} className="text-blue-500" /> Take Quiz
           </button>
           <button type="button" onClick={() => { if (!loading && !isTyping) { onSubmit("Please show my current progress tracker and tell me what we should cover next."); } }} disabled={loading || isTyping} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/60 font-google-sans text-[11px] font-bold transition-all shrink-0 text-zinc-500 dark:text-zinc-400 disabled:opacity-50">
             <Target size={13} className="text-blue-500" /> Track Progress
@@ -843,6 +840,24 @@ const ActivePromptBar = ({ onSubmit, onStop, loading, isTyping, setShowHistoryMo
           <button type="button" onClick={() => setShowHistoryModal(true)} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/60 font-google-sans text-[11px] font-bold transition-all shrink-0 text-zinc-500 dark:text-zinc-400">
             <BarChart size={13} className="text-blue-500" /> Quiz History
           </button>
+
+          {currentProgress > 0 && (
+            <>
+              <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 mx-1 shrink-0 hidden sm:block"></div>
+              
+              <div className="flex-1 min-w-[100px] max-w-[160px] flex items-center gap-2 pl-1 h-5 ml-auto">
+                <div className="flex-1 h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-blue-500 rounded-full transition-all duration-700 ease-out relative"
+                    style={{ width: `${currentProgress}%` }}
+                  >
+                    <div className="absolute inset-0 bg-white/20 w-full animate-[pulse_2s_infinite]"></div>
+                  </div>
+                </div>
+                <span className="text-[10.5px] font-bold text-zinc-500 w-6 text-right">{currentProgress}%</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -1023,9 +1038,6 @@ export default function StudyChatPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [lastAssistantIndex, setLastAssistantIndex] = useState<number>(-1);
 
-  const [webSearchMode, setWebSearchMode] = useState(false);
-  const [deepThinkMode, setDeepThinkMode] = useState(false);
-
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -1088,7 +1100,7 @@ export default function StudyChatPage() {
     setMessages([{ role: 'user', content: userMessage }]);
 
     try {
-      const res = await sendStudyMessage(null, userMessage, { subject, level }, undefined, { webSearch: webSearchMode, deepThink: deepThinkMode });
+      const res = await sendStudyMessage(null, userMessage, { subject, level });
       setSessionId(res.sessionId);
       getStudySessions().then(setSessions);
 
@@ -1117,7 +1129,7 @@ export default function StudyChatPage() {
     setLoading(true);
 
     try {
-      const res = await sendStudyMessage(sessionId, text, undefined, undefined, { webSearch: webSearchMode, deepThink: deepThinkMode });
+      const res = await sendStudyMessage(sessionId, text);
       if (requestRef.current !== reqId) return;
 
       setMessages(prev => {
@@ -1146,7 +1158,7 @@ export default function StudyChatPage() {
     setLoading(true);
 
     try {
-      const res = await sendStudyMessage(sessionId, newText, undefined, index, { webSearch: webSearchMode, deepThink: deepThinkMode });
+      const res = await sendStudyMessage(sessionId, newText, undefined, index);
       if (requestRef.current !== reqId) return;
       setMessages([...truncatedMessages, { role: 'user', content: newText }, { role: 'assistant', content: res.content }]);
       setLastAssistantIndex(truncatedMessages.length + 1);
@@ -1169,6 +1181,38 @@ export default function StudyChatPage() {
       handleEditSubmit(userMsgIndex, lastUserMsg);
     }
   };
+
+  let currentProgress = 0;
+  let markDoneCount = 0;
+
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const msg = messages[i];
+    
+    if (msg.role === 'user' && typeof msg.content === 'string' && msg.content.includes('I understand this concept completely')) {
+      markDoneCount++;
+    }
+
+    if (msg.role === 'assistant' && typeof msg.content === 'string' && msg.content.includes('```json?chameleon')) {
+      let foundBaseMastery = false;
+      const matches = msg.content.match(/```json\?chameleon\s*([\s\S]*?)```/g);
+      if (matches) {
+        for (let m = matches.length - 1; m >= 0; m--) {
+          try {
+            const cleaned = matches[m].replace(/```json\?chameleon/g, '').replace(/```/g, '');
+            const parsed = JSON.parse(cleaned);
+            if (parsed.component === 'ProgressWidget' && typeof parsed.props?.masteryPercentage === 'number') {
+              currentProgress = parsed.props.masteryPercentage;
+              foundBaseMastery = true;
+              break;
+            }
+          } catch (e) {}
+        }
+      }
+      if (foundBaseMastery) break;
+    }
+  }
+
+  currentProgress = Math.min(100, currentProgress + (markDoneCount * 10));
 
   return (
     <>
@@ -1325,10 +1369,7 @@ export default function StudyChatPage() {
               loading={loading} 
               isTyping={isTyping}
               setShowHistoryModal={setShowHistoryModal}
-              webSearchMode={webSearchMode}
-              setWebSearchMode={setWebSearchMode}
-              deepThinkMode={deepThinkMode}
-              setDeepThinkMode={setDeepThinkMode}
+              currentProgress={currentProgress}
             />
           </div>
             </>

@@ -13,8 +13,7 @@ import { Sun, Moon, Menu, X, User, LayoutDashboard, LogOut, Layers, Lock } from 
 // STRICT ROUTING ORDER: Features -> About -> How It Works
 const NAV_LINKS = [
   { label: 'Features', href: '/features' },
-  { label: 'About', href: '/about' },
-  { label: 'How It Works', href: '/how-it-works' }
+  { label: 'About', href: '/about' }
 ]
 
 export function ThemeToggle() {

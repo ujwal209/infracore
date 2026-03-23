@@ -15,63 +15,38 @@ import {
 
 const AVATARS = [
   {
-    title: "General Assistant",
-    shortName: "Assistant",
-    label: "Core AI",
-    description: "Your versatile companion for daily operational tasks. This agent is engineered to handle creative writing, complex inquiries, and extensive data summarization. It adapts seamlessly to your specific tone and provides grounded, high-fidelity responses to keep your workflow completely uninterrupted.",
-    useCase: "General Intelligence",
-    href: "/dashboard/chat",
-  },
-  {
     title: "Neural Study Buddy",
     shortName: "Study",
     label: "Scholar",
-    description: "Designed strictly for deep learning and technical synthesis. It deconstructs high-level academic concepts and tough engineering problems into digestible mental models, helping you master complex subjects efficiently from first principles.",
+    description: (
+      <ul className="list-disc pl-5 space-y-2 mt-2 font-outfit text-zinc-500 dark:text-zinc-400">
+        <li>Personalized AI tutoring</li>
+        <li>Adaptive quiz generation</li>
+        <li>Complex query resolution</li>
+        <li>Learning progress tracking</li>
+      </ul>
+    ),
     useCase: "Technical Synthesis",
     href: "/dashboard/chat/study",
+  },
+  {
+    title: "General Assistant",
+    shortName: "Assistant",
+    label: "Core AI",
+    description: (
+      <ul className="list-disc pl-5 space-y-2 mt-2 font-outfit text-zinc-500 dark:text-zinc-400">
+        <li>Multi-domain query handling</li>
+        <li>Advanced problem solving</li>
+        <li>Intelligent content generation</li>
+        <li>Structured response delivery</li>
+      </ul>
+    ),
+    useCase: "General Intelligence",
+    href: "/dashboard/chat",
   }
 ]
 
 export default function HeroHighlight() {
-  const scrollRef = React.useRef<HTMLDivElement>(null)
-  const [activeIndex, setActiveIndex] = React.useState(0)
-
-  // Passive listener for mobile swiping to update the dots
-  const handleScroll = () => {
-    if (!scrollRef.current) return
-    const scrollLeft = scrollRef.current.scrollLeft
-    const width = scrollRef.current.clientWidth
-    const newIndex = Math.round(scrollLeft / width)
-    if (newIndex !== activeIndex) {
-      setActiveIndex(newIndex)
-    }
-  }
-
-  // Bulletproof manual scroll function for the buttons
-  const scrollToSlide = (index: number) => {
-    if (!scrollRef.current) return
-    const width = scrollRef.current.clientWidth
-    scrollRef.current.scrollTo({
-      left: width * index,
-      behavior: 'smooth'
-    })
-    setActiveIndex(index)
-  }
-
-  // Navigation Handlers
-  const handleNext = () => {
-    const nextIndex = (activeIndex + 1) % AVATARS.length
-    scrollToSlide(nextIndex)
-  }
-
-  const handlePrev = () => {
-    const prevIndex = (activeIndex - 1 + AVATARS.length) % AVATARS.length
-    scrollToSlide(prevIndex)
-  }
-
-  const handleDotClick = (index: number) => {
-    scrollToSlide(index)
-  }
 
   return (
     <>
@@ -97,27 +72,15 @@ export default function HeroHighlight() {
           {/* --- SECTION 1: HIGHLIGHT SHOWCASE --- */}
           <section className="relative w-full flex flex-col mt-4 md:mt-8">
             
-            {/* Header */}
-            <div className="flex items-center gap-3 mb-8 md:mb-10">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <Sparkles className="text-white" size={18} />
-              </div>
-              <h2 className="font-google-sans text-xl md:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
-                Initialize Agent
-              </h2>
-            </div>
+            {/* Removed Initialize Agent Header per user request */}
 
-            {/* Carousel Container */}
-            <div 
-              ref={scrollRef}
-              onScroll={handleScroll}
-              className="flex overflow-x-auto snap-x snap-mandatory gap-6 md:gap-8 pb-8 -mx-4 px-4 sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] md:grid md:grid-cols-2 md:overflow-visible md:snap-none"
-            >
+            {/* Grid Container */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 w-full pb-8">
               {AVATARS.map((avatar, i) => {
                 return (
                   <div 
                     key={i} 
-                    className="snap-center shrink-0 w-full md:w-auto"
+                    className="w-full h-full"
                   >
                     <Link 
                       href={avatar.href}
@@ -157,9 +120,9 @@ export default function HeroHighlight() {
                             <h3 className="font-google-sans text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-zinc-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
                               {avatar.title}
                             </h3>
-                            <p className="text-zinc-500 dark:text-zinc-400 text-base md:text-[17px] font-medium leading-relaxed max-w-xl">
+                            <div className="text-zinc-600 dark:text-zinc-400 text-base md:text-[17px] font-medium leading-relaxed max-w-xl">
                               {avatar.description}
-                            </p>
+                            </div>
                           </div>
 
                           {/* Action Row */}
@@ -183,89 +146,9 @@ export default function HeroHighlight() {
               })}
             </div>
 
-            {/* --- MANUAL NAVIGATION CONTROLS (Hidden on desktop since both show) --- */}
-            <div className="flex md:hidden items-center justify-between gap-8 mt-2">
-              <button 
-                onClick={handlePrev}
-                className="w-12 h-12 flex items-center justify-center rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#0a0a0a] text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-[#111] hover:text-zinc-900 dark:hover:text-white transition-all shadow-sm outline-none"
-                aria-label="Previous Agent"
-              >
-                <ChevronLeft size={24} />
-              </button>
-
-              <div className="flex items-center gap-3">
-                {AVATARS.map((_, i) => (
-                  <button 
-                    key={i} 
-                    onClick={() => handleDotClick(i)}
-                    aria-label={`Go to slide ${i + 1}`}
-                    className={`h-2.5 rounded-full transition-all duration-500 outline-none ${
-                      activeIndex === i 
-                        ? 'w-12 bg-blue-600' 
-                        : 'w-3 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700'
-                    }`} 
-                  />
-                ))}
-              </div>
-
-              <button 
-                onClick={handleNext}
-                className="w-12 h-12 flex items-center justify-center rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#0a0a0a] text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-[#111] hover:text-zinc-900 dark:hover:text-white transition-all shadow-sm outline-none"
-                aria-label="Next Agent"
-              >
-                <ChevronRight size={24} />
-              </button>
-            </div>
           </section>
 
-          {/* --- SECTION 2: SYSTEM MANUAL / QUICK START GUIDE --- */}
-          <section className="mt-8 md:mt-16 relative z-10">
-            <div className="flex items-center gap-3 mb-8 md:mb-12">
-              <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center shadow-sm">
-                <BookOpen className="text-zinc-600 dark:text-zinc-400" size={18} />
-              </div>
-              <h2 className="font-google-sans text-xl md:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
-                Operational Manual
-              </h2>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-              
-              {/* Step 1 */}
-              <div className="group p-8 md:p-10 rounded-[2rem] bg-[#fafafa] dark:bg-[#0a0a0a] border border-zinc-200/80 dark:border-zinc-800/60 hover:bg-white dark:hover:bg-[#0c0c0e] hover:border-blue-200 dark:hover:border-zinc-700 transition-all duration-300 hover:shadow-[0_12px_40px_rgba(0,0,0,0.04)] dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.2)]">
-                <div className="w-12 h-12 rounded-2xl bg-white dark:bg-[#111] border border-zinc-200 dark:border-zinc-800 flex items-center justify-center mb-8 shadow-sm group-hover:border-blue-200 dark:group-hover:border-blue-900 transition-colors">
-                  <Target size={20} className="text-blue-600 dark:text-blue-500" />
-                </div>
-                <h3 className="font-google-sans text-xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">1. Select a Domain</h3>
-                <p className="text-[15px] text-zinc-500 dark:text-zinc-400 leading-relaxed font-medium">
-                  Navigate the core models above to find the agent tailored to your task. Each model operates in isolation to provide highly specialized expertise rather than generic knowledge.
-                </p>
-              </div>
-
-              {/* Step 2 */}
-              <div className="group p-8 md:p-10 rounded-[2rem] bg-[#fafafa] dark:bg-[#0a0a0a] border border-zinc-200/80 dark:border-zinc-800/60 hover:bg-white dark:hover:bg-[#0c0c0e] hover:border-blue-200 dark:hover:border-zinc-700 transition-all duration-300 hover:shadow-[0_12px_40px_rgba(0,0,0,0.04)] dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.2)]">
-                <div className="w-12 h-12 rounded-2xl bg-white dark:bg-[#111] border border-zinc-200 dark:border-zinc-800 flex items-center justify-center mb-8 shadow-sm group-hover:border-blue-200 dark:group-hover:border-blue-900 transition-colors">
-                  <Settings2 size={20} className="text-blue-600 dark:text-blue-500" />
-                </div>
-                <h3 className="font-google-sans text-xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">2. Establish Context</h3>
-                <p className="text-[15px] text-zinc-500 dark:text-zinc-400 leading-relaxed font-medium">
-                  Once a session is initialized, provide background parameters. The systems perform optimally when given rigid constraints, precise goals, and formatting preferences upfront.
-                </p>
-              </div>
-
-              {/* Step 3 */}
-              <div className="group p-8 md:p-10 rounded-[2rem] bg-[#fafafa] dark:bg-[#0a0a0a] border border-zinc-200/80 dark:border-zinc-800/60 hover:bg-white dark:hover:bg-[#0c0c0e] hover:border-blue-200 dark:hover:border-zinc-700 transition-all duration-300 hover:shadow-[0_12px_40px_rgba(0,0,0,0.04)] dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.2)]">
-                <div className="w-12 h-12 rounded-2xl bg-white dark:bg-[#111] border border-zinc-200 dark:border-zinc-800 flex items-center justify-center mb-8 shadow-sm group-hover:border-blue-200 dark:group-hover:border-blue-900 transition-colors">
-                  <Sparkles size={20} className="text-blue-600 dark:text-blue-500" />
-                </div>
-                <h3 className="font-google-sans text-xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">3. Iterate and Refine</h3>
-                <p className="text-[15px] text-zinc-500 dark:text-zinc-400 leading-relaxed font-medium">
-                  Treat initial outputs as structural drafts. Utilize targeted follow-up prompts to calibrate the tone, expand upon core bullet points, or pivot the strategic direction entirely.
-                </p>
-              </div>
-
-            </div>
-          </section>
+          {/* --- SECTION 2: SYSTEM MANUAL REMOVED --- */}
 
         </div>
       </div>

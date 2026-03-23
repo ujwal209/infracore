@@ -2,62 +2,63 @@
 
 import * as React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Navbar } from '@/components/landing/navbar'
 import { Footer } from '@/components/landing/footer'
-import { Brain, BookOpen, Rss, MessageSquareHeart, Zap, ArrowRight } from "lucide-react"
 
 export default function FeaturesPage() {
   // Restructured for a 5-item bento grid with a cohesive Blue/Cyan/Indigo theme
   const features = [
     { 
       title: 'General Assistant', 
-      desc: 'Your all-purpose mentor for thinking, writing, and problem-solving. Ask anything and receive thoughtful, highly-structured answers instantly.',
-      icon: <Brain size={28} />,
-      watermark: <Brain size={240} />,
+      desc: [
+        'Handles diverse and complex queries',
+        'Delivers structured and precise responses',
+        'Assists in high-quality writing and content',
+        'Enables effective problem-solving and analysis'
+      ],
       colSpan: 'md:col-span-2',
       color: 'text-blue-500',
       bg: 'bg-blue-50 dark:bg-blue-500/10 border-blue-100 dark:border-blue-500/20',
-      glow: 'hover:border-blue-400 dark:hover:border-blue-500/50 hover:shadow-[0_20px_50px_rgba(37,99,235,0.15)]'
+      glow: 'hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-xl dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)]'
     },
     { 
       title: 'Neural Study Buddy', 
-      desc: 'Understand deeply. Master faster. Ask difficult academic questions and get step-by-step explanations that actually stick in your memory.',
-      icon: <BookOpen size={28} />,
-      watermark: <BookOpen size={240} />,
+      desc: [
+        'Provides personalized AI tutoring',
+        'Conducts adaptive quizzes and assessments',
+        'Solves complex academic queries',
+        'Tracks learning progress and performance'
+      ],
       colSpan: 'md:col-span-1',
       color: 'text-sky-500',
       bg: 'bg-sky-50 dark:bg-sky-500/10 border-sky-100 dark:border-sky-500/20',
-      glow: 'hover:border-sky-400 dark:hover:border-sky-500/50 hover:shadow-[0_20px_50px_rgba(14,165,233,0.15)]'
+      glow: 'hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-xl dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)]'
     },
     { 
       title: 'Live Intelligence Feed', 
-      desc: 'Real-time insights across education, technology, and industry. Stay current—the platform searches the web and surfaces what is relevant to you automatically.',
-      icon: <Rss size={28} />,
-      watermark: <Rss size={240} />,
+      desc: [
+        'Delivers real-time information updates',
+        'Aggregates insights across multiple sources',
+        'Highlights relevant trends and developments',
+        'Enables quick and informed awareness'
+      ],
       colSpan: 'md:col-span-1',
       color: 'text-indigo-500',
       bg: 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-100 dark:border-indigo-500/20',
-      glow: 'hover:border-indigo-400 dark:hover:border-indigo-500/50 hover:shadow-[0_20px_50px_rgba(99,102,241,0.15)]'
+      glow: 'hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-xl dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)]'
     },
     { 
       title: 'Community Feedback', 
-      desc: 'Built with you, for you. Your feedback directly shapes how each module evolves—this platform is a living, breathing product that learns what you need.',
-      icon: <MessageSquareHeart size={28} />,
-      watermark: <MessageSquareHeart size={240} />,
-      colSpan: 'md:col-span-2',
+      desc: [
+        'Collects user insights and opinions',
+        'Enables collaborative discussions and input',
+        'Highlights valuable suggestions and trends',
+        'Improves quality through shared feedback'
+      ],
       color: 'text-cyan-500',
       bg: 'bg-cyan-50 dark:bg-cyan-500/10 border-cyan-100 dark:border-cyan-500/20',
-      glow: 'hover:border-cyan-400 dark:hover:border-cyan-500/50 hover:shadow-[0_20px_50px_rgba(6,182,212,0.15)]'
-    },
-    { 
-      title: 'Seamless Execution', 
-      desc: 'Swipe. Select. Execute. Everything you need is one interaction away—no friction, no clutter. Just absolute clarity and speed.',
-      icon: <Zap size={28} />,
-      watermark: <Zap size={240} />,
-      colSpan: 'md:col-span-3', // Spans the full width at the bottom to anchor the grid beautifully
-      color: 'text-blue-400',
-      bg: 'bg-slate-50 dark:bg-blue-900/10 border-slate-200 dark:border-blue-800/30',
-      glow: 'hover:border-blue-400 dark:hover:border-blue-500/50 hover:shadow-[0_20px_50px_rgba(37,99,235,0.15)]'
+      glow: 'hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-xl dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)]'
     }
   ]
 
@@ -73,11 +74,8 @@ export default function FeaturesPage() {
 
       <div className="min-h-screen font-outfit bg-[#fafafa] dark:bg-[#050505] text-zinc-900 dark:text-zinc-100 tracking-tight antialiased flex flex-col relative overflow-hidden">
         
-        {/* Ambient Background Grid & Multi-Glows (Switched to Blue tones) */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#18181b_1px,transparent_1px),linear-gradient(to_bottom,#18181b_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_100%_at_50%_0%,#000_70%,transparent_100%)] -z-10 opacity-60 dark:opacity-80" />
-        
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-500/10 dark:bg-blue-600/15 rounded-full blur-[150px] pointer-events-none -z-10 animate-pulse duration-[4000ms]" />
-        <div className="absolute top-[40%] left-0 w-[500px] h-[500px] bg-sky-500/10 dark:bg-sky-600/10 rounded-full blur-[150px] pointer-events-none -z-10" />
+        {/* Minimalist Background Setting */}
+        <div className="absolute inset-0 bg-[#fafafa] dark:bg-[#050505] -z-30" />
 
         <Navbar />
         
@@ -91,7 +89,7 @@ export default function FeaturesPage() {
               </div>
               <h1 className="font-google-sans text-5xl sm:text-6xl md:text-7xl font-extrabold text-zinc-900 dark:text-white tracking-tight mb-6 leading-[1.05]">
                 Everything you need. <br className="hidden sm:block" />
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-zinc-500 to-zinc-400 dark:from-zinc-400 dark:to-zinc-600">
+                <span className="text-zinc-600 dark:text-zinc-400">
                   Nothing you don't.
                 </span>
               </h1>
@@ -101,31 +99,30 @@ export default function FeaturesPage() {
             </div>
 
             {/* SaaS Bento Grid Layout */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 lg:gap-10 max-w-5xl mx-auto">
               {features.map((f, i) => (
                 <div 
                   key={i} 
-                  className={`group relative flex flex-col bg-white/80 dark:bg-[#0c0c0e]/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800/80 rounded-[2.5rem] p-8 sm:p-12 transition-all duration-500 hover:-translate-y-2 overflow-hidden shadow-sm ${f.colSpan} ${f.glow}`}
+                  className={`group relative flex flex-col bg-white/80 dark:bg-[#0c0c0e]/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800/80 rounded-[2.5rem] p-8 sm:p-12 transition-all duration-500 hover:-translate-y-2 overflow-hidden shadow-sm ${f.glow}`}
                 >
-                  
-                  {/* Giant Abstract Watermark Icon */}
-                  <div className={`absolute -right-12 -bottom-16 opacity-[0.03] dark:opacity-[0.02] group-hover:opacity-[0.08] dark:group-hover:opacity-[0.06] group-hover:scale-110 group-hover:-rotate-12 transition-all duration-700 pointer-events-none z-0 ${f.color}`}>
-                    {f.watermark}
-                  </div>
-
-                  {/* Icon Block */}
-                  <div className={`relative z-10 w-16 h-16 rounded-2xl flex items-center justify-center mb-8 border transition-all duration-500 shadow-sm group-hover:scale-110 ${f.bg} ${f.color}`}>
-                    {f.icon}
-                  </div>
                   
                   {/* Content */}
                   <div className="relative z-10 flex flex-col h-full">
-                    <h3 className="font-google-sans text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight mb-4">
-                      {f.title}
-                    </h3>
-                    <p className="text-[16px] sm:text-[17px] text-zinc-500 dark:text-zinc-400 font-medium leading-[1.8] mt-auto">
-                      {f.desc}
-                    </p>
+                    <div className="mb-6 flex flex-col items-start gap-4">
+                      <div className="h-12 px-4 bg-zinc-50 dark:bg-[#111113] border border-zinc-200 dark:border-zinc-800 flex items-center justify-center rounded-xl shadow-sm">
+                        <Image src="/logo.png" width={120} height={30} alt="Inferacore" className="h-[22px] w-auto dark:invert opacity-[0.85]" />
+                      </div>
+                      <h3 className="font-google-sans text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
+                        {f.title}
+                      </h3>
+                    </div>
+                    <ul className="text-[15px] sm:text-[16px] text-zinc-500 dark:text-zinc-400 font-medium leading-[1.8] mt-auto list-disc pl-5 space-y-2">
+                      {f.desc.map((bullet, idx) => (
+                        <li key={idx} className="pl-1 leading-relaxed">
+                          {bullet}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                   
                 </div>
@@ -133,23 +130,7 @@ export default function FeaturesPage() {
             </div>
 
             {/* Bottom Exuberant CTA */}
-            <div className="mt-32 sm:mt-40 relative max-w-5xl mx-auto">
-              <div className="absolute inset-0 bg-blue-500/5 dark:bg-blue-600/10 rounded-[3rem] blur-[80px] pointer-events-none -z-10" />
-              <div className="bg-white dark:bg-[#0c0c0e] border border-zinc-200 dark:border-zinc-800/80 rounded-[3rem] p-12 sm:p-20 text-center shadow-[0_20px_60px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
-                <h2 className="font-google-sans text-3xl sm:text-4xl md:text-5xl font-extrabold text-zinc-900 dark:text-white tracking-tight mb-6">
-                  Ready to start building?
-                </h2>
-                <p className="text-lg text-zinc-500 dark:text-zinc-400 font-medium max-w-xl mx-auto mb-10">
-                  Join the platform and gain access to the complete suite of intelligence tools designed to accelerate your growth.
-                </p>
-                <Link 
-                  href="/auth/signup" 
-                  className="inline-flex items-center justify-center gap-3 px-10 py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-google-sans font-bold text-[17px] transition-all shadow-[0_8px_30px_rgba(37,99,235,0.3)] dark:shadow-[0_8px_30px_rgba(37,99,235,0.15)] hover:shadow-[0_15px_40px_rgba(37,99,235,0.4)] dark:hover:shadow-[0_15px_40px_rgba(37,99,235,0.25)] active:scale-95 hover:-translate-y-1 outline-none"
-                >
-                  Create Free Account <ArrowRight size={20} />
-                </Link>
-              </div>
-            </div>
+            {/* CTA section removed upon user request */}
 
           </div>
         </main>
