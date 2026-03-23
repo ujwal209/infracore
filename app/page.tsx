@@ -161,7 +161,7 @@ export default function LandingPage() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto mb-16 sm:mb-24 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-150 fill-mode-both">
               <button 
-                onClick={() => { const el = document.getElementById('cta'); if (el) el.scrollIntoView({ behavior: 'smooth' }) }} 
+                onClick={() => { const el = document.getElementById('demo'); if (el) el.scrollIntoView({ behavior: 'smooth' }) }} 
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-700 text-white font-google-sans font-bold px-8 sm:px-10 h-14 sm:h-16 rounded-full transition-all text-[16px] sm:text-[17px] active:scale-95 hover:-translate-y-1 outline-none border border-transparent group"
               >
                 Access Workspace <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
@@ -194,89 +194,111 @@ export default function LandingPage() {
         </section>
 
         {/* =========================================================
-            EXUBERANT CTA SECTION & DEMO
+            INTERACTIVE DEMO SECTION
         ========================================================= */}
-        <section id="cta" className="py-20 sm:py-32 lg:py-40 bg-white dark:bg-[#050505] overflow-hidden relative flex-1">
+        <section id="demo" className="py-20 sm:py-32 bg-white dark:bg-[#050505] overflow-hidden relative">
           <div className="max-w-5xl mx-auto px-5 sm:px-8 relative z-10">
-            {promptsUsed < 3 ? (
-              <div className="text-center">
-                <h2 className="font-google-sans text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter text-zinc-900 dark:text-white mb-4 sm:mb-6 leading-[1.05]">
-                  Experience Neural Study
-                </h2>
-                <p className="text-[16px] sm:text-xl text-zinc-500 dark:text-zinc-400 font-medium mb-10 max-w-2xl mx-auto leading-relaxed px-2">
-                  Test out our inference engine right now. You have {3 - promptsUsed} free prompt{3 - promptsUsed !== 1 ? 's' : ''} remaining.
-                </p>
-                <div className="w-full max-w-5xl mx-auto bg-white/60 dark:bg-[#0c0c0e]/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col h-[600px] text-left">
-                  <div className="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-[#111113]/80 flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <Image src="/logo.png" width={100} height={24} alt="Inferacore" className="h-[18px] sm:h-[22px] w-auto dark:invert opacity-95" />
-                      <div className="h-5 w-[1px] bg-zinc-300 dark:bg-zinc-700 hidden sm:block"></div>
-                      <span className="hidden sm:inline-block text-zinc-500 dark:text-zinc-400 font-google-sans text-xs sm:text-sm font-bold tracking-wide uppercase mt-0.5">Neural Engine Console</span>
-                    </div>
-                    <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 uppercase tracking-widest">{3 - promptsUsed} Prompts Left</span>
-                  </div>
-                  <div className="flex-1 p-5 overflow-y-auto flex flex-col gap-4 custom-scrollbar">
-                    {demoMessages.length === 0 && (
-                      <div className="m-auto text-center text-zinc-400 font-medium max-w-sm">
-                        Ask me to map out a syllabus for Machine Learning or explain Quantum Entanglement!
-                      </div>
-                    )}
-                    {demoMessages.map((m, i) => (
-                      <div key={i} className={`w-fit max-w-[85%] p-4 rounded-2xl ${m.role === 'user' ? 'bg-blue-600 text-white self-end rounded-tr-sm' : 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 self-start rounded-tl-sm'}`}>
-                        {m.role === 'user' ? (
-                          <p className="text-[15px] font-medium leading-relaxed whitespace-pre-wrap">{m.content}</p>
-                        ) : (
-                          <div className="prose prose-zinc dark:prose-invert prose-sm max-w-none">
-                            <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={DemoComponents}>{m.content}</ReactMarkdown>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                    {demoLoading && (
-                      <div className="bg-zinc-100 dark:bg-zinc-800 w-fit p-4 rounded-2xl rounded-tl-sm self-start">
-                        <Loader2 size={18} className="animate-spin text-zinc-500" />
-                      </div>
-                    )}
-                  </div>
-                  <form onSubmit={handleDemoSubmit} className="p-4 bg-white dark:bg-[#0c0c0e] border-t border-zinc-200 dark:border-zinc-800 flex gap-3">
-                    <input type="text" value={demoInput} onChange={e => setDemoInput(e.target.value)} placeholder="Enter a complex topic..." className="flex-1 bg-zinc-100 dark:bg-zinc-900/50 border border-transparent focus:border-blue-500 rounded-xl px-4 text-[15px] outline-none transition-all placeholder:text-zinc-400 font-medium" disabled={demoLoading} />
-                    <button type="submit" disabled={demoLoading || !demoInput.trim()} className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:bg-blue-500 disabled:opacity-50 transition-colors shrink-0">
-                      <Send size={18} />
-                    </button>
-                  </form>
+            <div className="text-center mb-16">
+              <h2 className="font-google-sans text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter text-zinc-900 dark:text-white mb-4 sm:mb-6 leading-[1.05]">
+                Experience Neural Study
+              </h2>
+              <p className="text-[16px] sm:text-xl text-zinc-500 dark:text-zinc-400 font-medium max-w-2xl mx-auto leading-relaxed px-2">
+                Test out our inference engine right now. You have {Math.max(0, 3 - promptsUsed)} free prompt{3 - promptsUsed !== 1 ? 's' : ''} remaining.
+              </p>
+            </div>
+
+            <div className="w-full max-w-5xl mx-auto bg-white/60 dark:bg-[#0c0c0e]/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col h-[600px] text-left">
+              <div className="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-[#111113]/80 flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <Image src="/logo.png" width={100} height={24} alt="Inferacore" className="h-[18px] sm:h-[22px] w-auto dark:invert opacity-95" />
+                  <div className="h-5 w-[1px] bg-zinc-300 dark:bg-zinc-700 hidden sm:block"></div>
+                  <span className="hidden sm:inline-block text-zinc-500 dark:text-zinc-400 font-google-sans text-xs sm:text-sm font-bold tracking-wide uppercase mt-0.5">Neural Engine Console</span>
                 </div>
+                <span className={`text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-widest ${promptsUsed >= 3 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}`}>
+                  {promptsUsed >= 3 ? 'Demo Expired' : `${3 - promptsUsed} Prompts Left`}
+                </span>
               </div>
-            ) : (
-              <div className="text-center">
-                <h2 className="font-google-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tighter text-zinc-900 dark:text-white mb-4 sm:mb-6 leading-[1.05]">
-                  Ready to deploy?
-                </h2>
-                <p className="text-[16px] sm:text-xl md:text-2xl text-zinc-500 dark:text-zinc-400 font-medium mb-10 sm:mb-16 max-w-2xl mx-auto leading-relaxed px-2">
-                  Demo expired. Join the platform and transform the way you learn, plan, and execute.
-                </p>
-                <div className="flex flex-col items-center max-w-lg mx-auto w-full">
-                  <button onClick={() => setAgreed(!agreed)} className={`flex items-start gap-3 sm:gap-4 w-full text-left p-5 sm:p-8 rounded-3xl sm:rounded-[2rem] border-2 transition-all duration-300 outline-none mb-6 sm:mb-10 bg-white/90 dark:bg-[#0c0c0e]/90 backdrop-blur-xl ${error ? 'border-red-500 bg-red-50/50 dark:bg-red-900/10 shadow-[0_0_30px_rgba(239,68,68,0.2)]' : agreed ? 'border-blue-500 dark:border-blue-500/50 shadow-[0_0_30px_rgba(37,99,235,0.1)]' : 'border-zinc-200 dark:border-zinc-800 hover:border-blue-300 dark:hover:border-zinc-700 shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.05)] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.4)]'}`}>
-                    <div className="mt-1 sm:mt-0.5 text-zinc-900 dark:text-white shrink-0 transition-transform duration-300 hover:scale-110">
-                      {agreed ? <CheckSquare size={24} className="sm:w-7 sm:h-7 text-blue-600 dark:text-blue-500" /> : <Square size={24} className="sm:w-7 sm:h-7 text-zinc-300 dark:text-zinc-700" />}
-                    </div>
-                    <div>
-                      <h4 className={`font-google-sans text-[15px] sm:text-[16px] font-bold mb-1 transition-colors ${agreed ? 'text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400'}`}>Initialize Workspace</h4>
-                      <p className="text-[13px] sm:text-[14px] font-medium text-zinc-500 dark:text-zinc-500 leading-relaxed pr-2">I understand how the platform operates and I am ready to accelerate my engineering workflow.</p>
-                    </div>
-                  </button>
-                  <Link href="/auth/signup" onClick={handleSignupClick} className={`w-full inline-flex items-center justify-center gap-3 font-google-sans font-bold h-14 sm:h-16 rounded-full text-[16px] sm:text-[17px] transition-all outline-none ${agreed ? 'bg-zinc-900 hover:bg-black text-white dark:bg-white dark:hover:bg-zinc-100 dark:text-zinc-900 shadow-[0_10px_30px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_30px_rgba(255,255,255,0.15)] active:scale-95 hover:-translate-y-1' : 'bg-zinc-100 dark:bg-zinc-900 border border-transparent dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 cursor-not-allowed'}`}>
-                    Create Account <ChevronRight size={20} className={agreed ? "text-white dark:text-zinc-900" : "text-zinc-400"} />
-                  </Link>
-                  <div className="h-6 mt-4 sm:mt-6">
-                    {error && (
-                      <p className="text-red-500 text-[12px] sm:text-[14px] font-bold animate-in fade-in zoom-in-95 duration-300 flex items-center justify-center gap-2">
-                        <AlertCircle size={16} className="w-4 h-4 sm:w-5 sm:h-5" /> Please acknowledge the agreement to proceed.
-                      </p>
+              <div className="flex-1 p-5 overflow-y-auto flex flex-col gap-4 custom-scrollbar">
+                {demoMessages.length === 0 && (
+                  <div className="m-auto text-center text-zinc-400 font-medium max-w-sm">
+                    Ask me to map out a syllabus for Machine Learning or explain Quantum Entanglement!
+                  </div>
+                )}
+                {demoMessages.map((m, i) => (
+                  <div key={i} className={`w-fit max-w-[85%] p-4 rounded-2xl ${m.role === 'user' ? 'bg-blue-600 text-white self-end rounded-tr-sm' : 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 self-start rounded-tl-sm'}`}>
+                    {m.role === 'user' ? (
+                      <p className="text-[15px] font-medium leading-relaxed whitespace-pre-wrap">{m.content}</p>
+                    ) : (
+                      <div className="prose prose-zinc dark:prose-invert prose-sm max-w-none">
+                        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={DemoComponents}>{m.content}</ReactMarkdown>
+                      </div>
                     )}
                   </div>
-                </div>
+                ))}
+                {demoLoading && (
+                  <div className="bg-zinc-100 dark:bg-zinc-800 w-fit p-4 rounded-2xl rounded-tl-sm self-start">
+                    <Loader2 size={18} className="animate-spin text-zinc-500" />
+                  </div>
+                )}
               </div>
-            )}
+              <form onSubmit={handleDemoSubmit} className="p-4 bg-white dark:bg-[#0c0c0e] border-t border-zinc-200 dark:border-zinc-800 flex gap-3">
+                <input 
+                  type="text" 
+                  value={demoInput} 
+                  onChange={e => setDemoInput(e.target.value)} 
+                  placeholder={promptsUsed >= 3 ? "Demo expired. Initialize your Workspace below to continue." : "Enter a complex topic..."} 
+                  className="flex-1 bg-zinc-100 dark:bg-zinc-900/50 border border-transparent focus:border-blue-500 rounded-xl px-4 text-[15px] outline-none transition-all placeholder:text-zinc-400 font-medium disabled:opacity-60" 
+                  disabled={demoLoading || promptsUsed >= 3} 
+                />
+                <button 
+                  type="submit" 
+                  disabled={demoLoading || !demoInput.trim() || promptsUsed >= 3} 
+                  className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:bg-blue-500 disabled:bg-zinc-300 dark:disabled:bg-zinc-800 disabled:text-zinc-500 transition-colors shrink-0"
+                >
+                  <Send size={18} />
+                </button>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================
+            SEPARATE CALL TO ACTION SECTION
+        ========================================================= */}
+        <section id="cta" className="py-16 sm:py-24 lg:py-32 bg-[#fafafa] dark:bg-[#050505] overflow-hidden relative border-t border-zinc-200/50 dark:border-zinc-800/50">
+          <div className="max-w-4xl mx-auto px-5 sm:px-8 relative z-10 text-center">
+            
+            <h2 className="font-google-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tighter text-zinc-900 dark:text-white mb-4 sm:mb-6 leading-[1.05]">
+              Ready to start?
+            </h2>
+            <p className="text-[16px] sm:text-xl md:text-2xl text-zinc-500 dark:text-zinc-400 font-medium mb-10 sm:mb-16 max-w-2xl mx-auto leading-relaxed px-2">
+              Join the platform and transform the way you learn, plan, and execute.
+            </p>
+            
+            <div className="flex flex-col items-center max-w-lg mx-auto w-full">
+              <button onClick={() => setAgreed(!agreed)} className={`flex items-start gap-3 sm:gap-4 w-full text-left p-5 sm:p-8 rounded-3xl sm:rounded-[2rem] border-2 transition-all duration-300 outline-none mb-6 sm:mb-10 bg-white/90 dark:bg-[#0c0c0e]/90 backdrop-blur-xl ${error ? 'border-red-500 bg-red-50/50 dark:bg-red-900/10 shadow-[0_0_30px_rgba(239,68,68,0.2)]' : agreed ? 'border-blue-500 dark:border-blue-500/50 shadow-[0_0_30px_rgba(37,99,235,0.1)]' : 'border-zinc-200 dark:border-zinc-800 hover:border-blue-300 dark:hover:border-zinc-700 shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.05)] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.4)]'}`}>
+                <div className="mt-1 sm:mt-0.5 text-zinc-900 dark:text-white shrink-0 transition-transform duration-300 hover:scale-110">
+                  {agreed ? <CheckSquare size={24} className="sm:w-7 sm:h-7 text-blue-600 dark:text-blue-500" /> : <Square size={24} className="sm:w-7 sm:h-7 text-zinc-300 dark:text-zinc-700" />}
+                </div>
+                <div>
+                  <h4 className={`font-google-sans text-[15px] sm:text-[16px] font-bold mb-1 transition-colors ${agreed ? 'text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400'}`}>Initialize Workspace</h4>
+                  <p className="text-[13px] sm:text-[14px] font-medium text-zinc-500 dark:text-zinc-500 leading-relaxed pr-2">I understand how the platform operates and I am ready to accelerate my engineering workflow.</p>
+                </div>
+              </button>
+              
+              <Link href="/auth/signup" onClick={handleSignupClick} className={`w-full inline-flex items-center justify-center gap-3 font-google-sans font-bold h-14 sm:h-16 rounded-full text-[16px] sm:text-[17px] transition-all outline-none ${agreed ? 'bg-zinc-900 hover:bg-black text-white dark:bg-white dark:hover:bg-zinc-100 dark:text-zinc-900 shadow-[0_10px_30px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_30px_rgba(255,255,255,0.15)] active:scale-95 hover:-translate-y-1' : 'bg-zinc-100 dark:bg-zinc-900 border border-transparent dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 cursor-not-allowed'}`}>
+                Create Account <ChevronRight size={20} className={agreed ? "text-white dark:text-zinc-900" : "text-zinc-400"} />
+              </Link>
+              
+              <div className="h-6 mt-4 sm:mt-6">
+                {error && (
+                  <p className="text-red-500 text-[12px] sm:text-[14px] font-bold animate-in fade-in zoom-in-95 duration-300 flex items-center justify-center gap-2">
+                    <AlertCircle size={16} className="w-4 h-4 sm:w-5 sm:h-5" /> Please acknowledge the agreement to proceed.
+                  </p>
+                )}
+              </div>
+            </div>
+
           </div>
         </section>
 
@@ -289,5 +311,3 @@ export default function LandingPage() {
     </>
   )
 }
-
-// Handled via lucide-react now.

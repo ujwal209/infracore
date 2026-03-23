@@ -108,8 +108,8 @@ export default function AboutPage() {
           <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
             
             <div className="max-w-[1400px] mx-auto px-5 sm:px-8 lg:px-12 text-center flex flex-col items-center">
-              <div className="mb-8 px-5 py-2.5 bg-white border border-zinc-200 dark:bg-[#0c0c0e] dark:border-zinc-800 rounded-full shadow-sm flex items-center justify-center animate-in fade-in slide-in-from-bottom-4 duration-700">
-                <Image src="/logo.png" width={100} height={24} alt="Inferacore" className="h-[14px] w-auto dark:invert opacity-90" />
+              <div className="mb-10 px-8 py-4 bg-white border border-zinc-200 dark:bg-[#0c0c0e] dark:border-zinc-800 rounded-full shadow-sm flex items-center justify-center animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <Image src="/logo.png" width={200} height={48} alt="Inferacore" className="h-[32px] md:h-[40px] w-auto dark:invert opacity-90" priority />
               </div>
               
               <h1 className="font-google-sans text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-extrabold tracking-tighter mb-8 leading-[1.05] max-w-5xl text-zinc-900 dark:text-white animate-in fade-in slide-in-from-bottom-5 duration-700 delay-100">
@@ -240,9 +240,6 @@ export default function AboutPage() {
 
             </div>
           </section>
-
-          {/* FOOTER CTA */}
-          {/* Section removed per user request */}
 
         </main>
 

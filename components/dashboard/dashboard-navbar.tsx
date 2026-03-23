@@ -20,8 +20,7 @@ interface DashboardNavbarProps {
 
 const NAV_LINKS = [
   { name: 'Home', path: '/dashboard', icon: Home },
-  { name: 'News Feed', path: '/news', icon: Newspaper },
-  { name: 'Vishwa AI', path: '/dashboard/chat', icon: MessageSquare },
+  { name: 'News Feed', path: '/news-feed', icon: Newspaper },
   { name: 'Profile', path: '/profile', icon: User },
   { name: 'Reviews', path: '/review', icon: Star },
 ]

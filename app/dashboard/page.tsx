@@ -5,7 +5,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { 
   ArrowRight, 
-  Sparkles, 
   ChevronLeft, 
   ChevronRight, 
   BookOpen, 
@@ -26,7 +25,6 @@ const AVATARS = [
         <li>Learning progress tracking</li>
       </ul>
     ),
-    useCase: "Technical Synthesis",
     href: "/dashboard/chat/study",
   },
   {
@@ -41,7 +39,6 @@ const AVATARS = [
         <li>Structured response delivery</li>
       </ul>
     ),
-    useCase: "General Intelligence",
     href: "/dashboard/chat",
   }
 ]
@@ -72,8 +69,6 @@ export default function HeroHighlight() {
           {/* --- SECTION 1: HIGHLIGHT SHOWCASE --- */}
           <section className="relative w-full flex flex-col mt-4 md:mt-8">
             
-            {/* Removed Initialize Agent Header per user request */}
-
             {/* Grid Container */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 w-full pb-8">
               {AVATARS.map((avatar, i) => {
@@ -125,13 +120,12 @@ export default function HeroHighlight() {
                             </div>
                           </div>
 
-                          {/* Action Row */}
+                          {/* Action Row - Clean text with circular arrow button */}
                           <div className="mt-auto pt-6 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between relative">
-                            <div className="space-y-1">
-                              <p className="font-google-sans text-[10px] font-bold text-zinc-400 uppercase tracking-[0.25em]">Primary Application</p>
-                              <p className="text-base md:text-lg font-bold text-zinc-900 dark:text-zinc-100 tracking-tight uppercase">
-                                {avatar.useCase}
-                              </p>
+                            <div className="flex items-center gap-2">
+                              <span className="font-google-sans text-sm md:text-base font-bold text-zinc-500 dark:text-zinc-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 tracking-wider uppercase transition-colors duration-300">
+                                Initialize Agent
+                              </span>
                             </div>
                             <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 flex items-center justify-center transition-all duration-300 group-hover:bg-blue-600 group-hover:border-blue-600 group-hover:text-white group-hover:shadow-[0_8px_20px_rgba(37,99,235,0.25)]">
                               <ArrowRight size={22} className="group-hover:-rotate-45 transition-transform duration-300 group-hover:text-white" />
@@ -147,8 +141,6 @@ export default function HeroHighlight() {
             </div>
 
           </section>
-
-          {/* --- SECTION 2: SYSTEM MANUAL REMOVED --- */}
 
         </div>
       </div>
