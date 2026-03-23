@@ -43,7 +43,8 @@ export async function sendStudyMessage(
   sessionId: string | null, 
   content: string, 
   initData?: { subject: string, level: string },
-  truncateIndex?: number
+  truncateIndex?: number,
+  options?: { webSearch?: boolean, deepThink?: boolean }
 ) {
   const supabaseAuth = await createServerClient();
   const { data: { user } } = await supabaseAuth.auth.getUser();
@@ -96,7 +97,12 @@ export async function sendStudyMessage(
     const response = await fetch("https://inferaagent.onrender.com/api/v1/study", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: content, history: chatHistory }),
+      body: JSON.stringify({ 
+        message: content, 
+        history: chatHistory,
+        webSearch: options?.webSearch,
+        deepThink: options?.deepThink
+      }),
     });
 
     if (!response.ok) throw new Error(await response.text());

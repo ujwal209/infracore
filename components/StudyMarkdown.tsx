@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
@@ -10,8 +10,9 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { 
   BookOpen, CheckCircle2, X, Sparkles, Check, 
-  Loader2, BarChart, ArrowRight, Copy, Maximize2, Download 
+  Loader2, BarChart, ArrowRight, Copy, Maximize2, Download, Play 
 } from 'lucide-react'
+import MonacoEditor from '@monaco-editor/react'
 
 // ==========================================
 // WIDGETS
@@ -375,6 +376,180 @@ export const InteractiveImage = ({ src, alt }: { src?: string; alt?: string }) =
   );
 };
 
+export const RunnableCodeBlock = ({ lang, text }: { lang: string, text: string }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [output, setOutput] = useState<string | null>(null);
+  const [editableCode, setEditableCode] = useState(text);
+  const [currentLang, setCurrentLang] = useState(lang.replace('?chameleon', '').toLowerCase());
+  const editorRef = useRef<any>(null);
+
+  const JUDGE0_LANGUAGES: Record<string, number> = {
+    javascript: 93, js: 93,
+    typescript: 94, ts: 94,
+    python: 71, py: 71,
+    cpp: 54, c: 50,
+    java: 62,
+    csharp: 51, cs: 51,
+    go: 60, golang: 60,
+    rust: 73, rs: 73,
+    php: 68, ruby: 72,
+    bash: 46, sh: 46
+  };
+
+  const getJudge0LanguageId = (l: string) => JUDGE0_LANGUAGES[l] || 71;
+
+  const handleRun = async () => {
+    if (!isModalOpen) setIsModalOpen(true);
+    setIsRunning(true);
+    setOutput("Initializing execution environment...\n");
+
+    try {
+      const languageId = getJudge0LanguageId(currentLang);
+
+      const response = await fetch("https://ce.judge0.com/submissions?base64_encoded=false&wait=true", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          language_id: languageId,
+          source_code: editorRef.current ? editorRef.current.getValue() : editableCode
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.compile_output) {
+        setOutput((prev) => prev + "\n[Compilation Error]\n" + data.compile_output);
+      } else if (data.stderr) {
+        setOutput((prev) => prev + "\n[Execution Error]\n" + data.stderr);
+      } else if (data.stdout !== undefined && data.stdout !== null) {
+        setOutput((prev) => prev + "\n" + (data.stdout || "[No Console Output]"));
+      } else {
+        setOutput((prev) => prev + "\n[Execution Failed]\n" + JSON.stringify(data));
+      }
+    } catch (error: any) {
+      setOutput((prev) => prev + "\n[Network Error]\n" + error.message);
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  const isRunnable = Object.keys(JUDGE0_LANGUAGES).includes(lang.replace('?chameleon', '').toLowerCase());
+
+
+  return (
+    <>
+      <div className="relative my-4 w-full max-w-full overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm min-w-0">
+        <div className="bg-[#111113] px-3 py-2 text-[10px] sm:text-[11px] font-mono text-zinc-400 border-b border-zinc-800 flex justify-between items-center rounded-t-xl z-20 relative">
+          <span className="font-google-sans font-bold tracking-wider uppercase text-zinc-500 truncate mr-2">
+            {lang.replace('?chameleon', '') || 'code'}
+          </span>
+          <div className="flex items-center gap-2">
+            {isRunnable && (
+              <button onClick={handleRun} className="flex items-center gap-1.5 px-2 py-1 text-blue-400 hover:text-white hover:bg-blue-600/20 transition-all rounded-md shrink-0 border border-transparent hover:border-blue-500/30">
+                <Play size={11} fill="currentColor" />
+                <span className="text-[10px] font-google-sans font-bold uppercase tracking-wider hidden sm:inline">Run Code</span>
+              </button>
+            )}
+            <CodeCopyButton text={text} />
+          </div>
+        </div>
+        <SyntaxHighlighter
+          style={oneDark}
+          language={lang.replace('?chameleon', '')}
+          PreTag="div"
+          className="!m-0 !bg-[#0c0c0e] !p-3 sm:!p-4 custom-scrollbar overflow-x-auto w-full rounded-b-xl"
+          codeTagProps={{ className: "text-[12px] sm:text-[13px] font-mono leading-relaxed text-zinc-200" }}
+        >
+          {text}
+        </SyntaxHighlighter>
+      </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setIsModalOpen(false)}>
+          <div className="relative w-full max-w-6xl h-full max-h-[95vh] bg-[#0c0c0e] border border-zinc-800 rounded-2xl flex flex-col shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800/80 bg-[#111113] rounded-t-2xl shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                  <Play size={14} className="text-blue-400" fill="currentColor" />
+                </div>
+                <div>
+                  <h3 className="font-google-sans text-[13px] sm:text-[14px] font-bold text-white tracking-wide">Live Console Execution</h3>
+                  <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-widest">Compiler (Judge0 Engine)</p>
+                </div>
+              </div>
+              <button onClick={() => setIsModalOpen(false)} className="p-2 bg-zinc-800/50 hover:bg-zinc-700 text-white rounded-xl transition-colors border border-zinc-700/50">
+                <X size={16} />
+              </button>
+            </div>
+            
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+              <div className="flex-1 border-b md:border-b-0 md:border-r border-[#333] bg-[#1e1e1e] flex flex-col">
+                 <div className="px-4 py-2 bg-[#252526] border-b border-[#1e1e1e] flex justify-between items-center shrink-0">
+                   <div className="flex items-center gap-3">
+                     <span className="text-[12px] font-mono text-[#9cdcfe]">index.code</span>
+                     <select 
+                       value={currentLang}
+                       onChange={(e) => setCurrentLang(e.target.value)}
+                       className="bg-[#3c3c3c] border-none text-[#cccccc] rounded px-2 py-1 outline-none font-sans text-[11px] cursor-pointer"
+                     >
+                       <option value="python">Python</option>
+                       <option value="javascript">JavaScript</option>
+                       <option value="typescript">TypeScript</option>
+                       <option value="java">Java</option>
+                       <option value="cpp">C++</option>
+                       <option value="c">C</option>
+                       <option value="csharp">C#</option>
+                       <option value="go">Go</option>
+                       <option value="rust">Rust</option>
+                     </select>
+                   </div>
+                   <button onClick={handleRun} disabled={isRunning} className="flex items-center gap-1.5 px-3 py-1 bg-[#0e639c] hover:bg-[#1177bb] text-white rounded transition-colors disabled:opacity-50 text-[11px] font-sans font-medium">
+                     {isRunning ? <Loader2 size={12} className="animate-spin" /> : <Play size={12} fill="currentColor" />}
+                     {isRunning ? "Running..." : "Run (F5)"}
+                   </button>
+                 </div>
+                 
+                 <div className="flex-1 w-full overflow-hidden flex relative bg-[#1e1e1e]">
+                   <MonacoEditor
+                     height="100%"
+                     theme="vs-dark"
+                     language={currentLang === 'c' || currentLang === 'cpp' ? 'cpp' : currentLang === 'bash' ? 'shell' : currentLang}
+                     defaultValue={editableCode}
+                     onChange={(val) => setEditableCode(val || '')}
+                     onMount={(editor) => { editorRef.current = editor; }}
+                     options={{
+                       minimap: { enabled: false },
+                       fontSize: 14,
+                       lineHeight: 21,
+                       padding: { top: 20 },
+                       scrollBeyondLastLine: false,
+                       smoothScrolling: true,
+                       cursorBlinking: 'smooth',
+                       cursorSmoothCaretAnimation: 'on'
+                     }}
+                     loading={<div className="flex items-center justify-center w-full h-full text-zinc-500 font-sans text-sm"><Loader2 className="animate-spin mr-2" size={16} /> Loading VS Code Engine...</div>}
+                   />
+                 </div>
+              </div>
+              <div className="flex-1 p-4 sm:p-6 overflow-y-auto custom-scrollbar font-mono text-[13.5px] sm:text-[14.5px] leading-relaxed text-zinc-300 whitespace-pre-wrap relative min-h-[300px] md:min-h-0 bg-[#08080a]">
+                {isRunning && !output?.includes('[Execution Failed]') && !output?.includes('[No Console Output]') && !output?.includes('[Network Error]') && !output?.includes('[Compilation Error]') && !output?.includes('[Execution Error]') ? (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-500 bg-[#08080a]/80 backdrop-blur-sm z-10 animate-in fade-in duration-300 shadow-inner">
+                    <Loader2 size={32} className="animate-spin text-blue-500 mb-4 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
+                    <span className="font-mono text-[11px] sm:text-xs uppercase tracking-widest font-bold text-blue-400">Executing Payload...</span>
+                  </div>
+                ) : null}
+                <div className="font-bold text-emerald-400 opacity-50 mb-4 select-none">$&gt; executing {currentLang}...</div>
+                {output}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
 export const getCustomComponents = ({ sessionId, onAnswerSubmitted, isLast, isTyping }: { sessionId?: string | null, onAnswerSubmitted?: any, isLast?: boolean, isTyping?: boolean }) => {
   return {
     table: ({ children }: any) => (
@@ -464,25 +639,7 @@ export const getCustomComponents = ({ sessionId, onAnswerSubmitted, isLast, isTy
       }
 
       if (!inline && lang) {
-        return (
-          <div className="relative my-4 w-full max-w-full overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm min-w-0">
-            <div className="bg-[#111113] px-3 py-2 text-[10px] sm:text-[11px] font-mono text-zinc-400 border-b border-zinc-800 flex justify-between items-center rounded-t-xl">
-              <span className="font-google-sans font-bold tracking-wider uppercase text-zinc-500 truncate mr-2">
-                {lang.replace('?chameleon', '') || 'code'}
-              </span>
-              <CodeCopyButton text={text} />
-            </div>
-            <SyntaxHighlighter
-              style={oneDark}
-              language={lang.replace('?chameleon', '')}
-              PreTag="div"
-              className="!m-0 !bg-[#0c0c0e] !p-3 sm:!p-4 custom-scrollbar overflow-x-auto w-full rounded-b-xl"
-              codeTagProps={{ className: "text-[12px] sm:text-[13px] font-mono leading-relaxed text-zinc-200" }}
-            >
-              {text}
-            </SyntaxHighlighter>
-          </div>
-        )
+        return <RunnableCodeBlock lang={lang} text={text} />;
       }
 
       return (

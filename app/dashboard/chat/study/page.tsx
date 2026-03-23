@@ -14,10 +14,11 @@ import {
   Trash2, Loader2, Check, PenLine, Globe, Zap, Square,
   GraduationCap, ArrowRight, BrainCircuit, Target,
   History, Trophy, Calendar, XCircle, CheckCircle2, BarChart, CheckSquare, Square as SquareIcon,
-  BookOpen, Sparkles, Copy, Maximize2, Download 
+  BookOpen, Sparkles, Copy, Maximize2, Download, Search as SearchIcon
 } from 'lucide-react'
 
 import { createClient } from '@/utils/supabase/client'
+import { RunnableCodeBlock } from '@/components/StudyMarkdown'
 import {
   getStudySessions,
   getStudyMessages,
@@ -360,75 +361,6 @@ const BaseMarkdownComponents = {
   },
 };
 
-const CodeBlockWithCompiler = ({ text, lang }: { text: string, lang: string }) => {
-  const [output, setOutput] = useState<string | null>(null);
-  const [isRunning, setIsRunning] = useState(false);
-
-  const handleRunCode = async () => {
-    setIsRunning(true);
-    setOutput(null);
-    try {
-      const res = await fetch("https://emkc.org/api/v2/piston/execute", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          language: lang,
-          version: "*",
-          files: [{ content: text }]
-        })
-      });
-      const data = await res.json();
-      if (data && data.run) {
-        setOutput(data.run.output || "No output.");
-      } else {
-        setOutput("Execution failed or language not supported.");
-      }
-    } catch (e) {
-      setOutput("Error executing code.");
-    } finally {
-      setIsRunning(false);
-    }
-  };
-
-  const isExecutable = ['python', 'javascript', 'js', 'typescript', 'ts', 'java', 'cpp', 'c', 'rust', 'go', 'php'].includes(lang);
-
-  return (
-    <div className="relative my-4 w-full max-w-full overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm min-w-0">
-      <div className="bg-[#111113] px-3 py-2 text-[10px] sm:text-[11px] font-mono text-zinc-400 border-b border-zinc-800 flex justify-between items-center rounded-t-xl">
-        <span className="font-google-sans font-bold tracking-wider uppercase text-zinc-500 truncate mr-2">
-          {lang}
-        </span>
-        <div className="flex items-center gap-2">
-          {isExecutable && (
-            <button onClick={handleRunCode} disabled={isRunning} className="flex items-center gap-1.5 px-2 py-1 bg-blue-600/20 text-blue-400 hover:bg-blue-600/40 hover:text-blue-300 transition-colors rounded-md text-[10px] font-bold uppercase tracking-wider disabled:opacity-50">
-              {isRunning ? <Loader2 size={12} className="animate-spin" /> : <Zap size={12} />}
-              Run Code
-            </button>
-          )}
-          <CopyButton text={text} className="hover:text-blue-400" />
-        </div>
-      </div>
-      <div className="w-full overflow-x-auto custom-scrollbar bg-[#0c0c0e]">
-        <SyntaxHighlighter 
-          style={oneDark} 
-          language={lang === 'js' ? 'javascript' : lang === 'ts' ? 'typescript' : lang} 
-          PreTag="div" 
-          customStyle={{ margin: 0, background: 'transparent', padding: '1rem' }}
-          codeTagProps={{ className: "text-[12px] sm:text-[13px] font-mono leading-relaxed text-zinc-200 block min-w-max" }}
-        >
-          {text}
-        </SyntaxHighlighter>
-      </div>
-      {output !== null && (
-        <div className="bg-[#111113] border-t border-zinc-800 p-3 w-full">
-          <div className="text-[10px] sm:text-[11px] font-google-sans font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Output</div>
-          <pre className="text-[12px] sm:text-[13px] font-mono text-zinc-300 whitespace-pre-wrap break-all">{output}</pre>
-        </div>
-      )}
-    </div>
-  );
-};
-
 export const getMarkdownComponents = ({ sessionId = '', onAnswerSubmitted = null, isLast = false, isTyping = false }: any = {}) => {
   return {
     ...BaseMarkdownComponents,
@@ -467,7 +399,22 @@ export const getMarkdownComponents = ({ sessionId = '', onAnswerSubmitted = null
       }
 
       if (!inline && lang) {
-        return <CodeBlockWithCompiler text={text} lang={lang.replace('?chameleon', '')} />;
+        if (['javascript', 'js', 'typescript', 'ts', 'python', 'java', 'cpp', 'c', 'rust', 'go', 'php', 'bash'].includes(lang.toLowerCase().replace('?chameleon', ''))) {
+          return <RunnableCodeBlock text={text} lang={lang.replace('?chameleon', '')} />;
+        }
+        return (
+          <div className="relative my-4 w-full max-w-full overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm min-w-0">
+            <div className="bg-[#111113] px-3 py-2 text-[10px] sm:text-[11px] font-mono text-zinc-400 border-b border-zinc-800 flex justify-between items-center rounded-t-xl">
+              <span className="font-google-sans font-bold tracking-wider uppercase text-zinc-500 truncate mr-2">{lang}</span>
+              <div className="flex items-center gap-2"><CopyButton text={text} className="hover:text-blue-400" /></div>
+            </div>
+            <div className="w-full overflow-x-auto custom-scrollbar bg-[#0c0c0e]">
+              <SyntaxHighlighter style={oneDark} language={lang === 'js' ? 'javascript' : lang === 'ts' ? 'typescript' : lang} PreTag="div" customStyle={{ margin: 0, background: 'transparent', padding: '1rem' }} codeTagProps={{ className: "text-[12px] sm:text-[13px] font-mono leading-relaxed text-zinc-200 block min-w-max" }}>
+                {text}
+              </SyntaxHighlighter>
+            </div>
+          </div>
+        )
       }
 
       return (
@@ -638,6 +585,10 @@ const MessageItem = React.memo(({ m, index, isLast, loading, isTypingGlobal, isL
   const { text: cleanText, widgets, isStreaming } = useMemo(() => extractWidgets(contentToProcess), [contentToProcess]);
   const showLoader = isStreaming && isNewAssistant && isLocallyTyping;
 
+  const memoizedComponents = useMemo(() => {
+    return getMarkdownComponents({ sessionId, onAnswerSubmitted, isLast, isTyping: isTypingGlobal });
+  }, [sessionId, onAnswerSubmitted, isLast, isTypingGlobal]);
+
   if (isEditing) {
     return (
       <div className="flex flex-col w-full max-w-[95%] sm:max-w-[85%] md:max-w-[80%] self-end animate-in fade-in duration-200 mb-2">
@@ -665,7 +616,7 @@ const MessageItem = React.memo(({ m, index, isLast, loading, isTypingGlobal, isL
           ) : (
             <>
               {cleanText && (
-                <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[[rehypeKatex, { strict: false, throwOnError: false }]]} components={getMarkdownComponents({ sessionId, onAnswerSubmitted, isLast, isTyping: isTypingGlobal })}>
+                <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[[rehypeKatex, { strict: false, throwOnError: false }]]} components={memoizedComponents}>
                   {cleanText}
                 </ReactMarkdown>
               )}
@@ -707,7 +658,7 @@ MessageItem.displayName = 'MessageItem';
 // ==========================================
 // 8. PROMPT BAR
 // ==========================================
-const ActivePromptBar = ({ onSubmit, onStop, loading, isTyping, setShowHistoryModal }: any) => {
+const ActivePromptBar = ({ onSubmit, onStop, loading, isTyping, setShowHistoryModal, webSearchMode, setWebSearchMode, deepThinkMode, setDeepThinkMode }: any) => {
   const [chatInput, setChatInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -762,14 +713,22 @@ const ActivePromptBar = ({ onSubmit, onStop, loading, isTyping, setShowHistoryMo
           </button>
         </div>
 
-        <div className="flex items-center gap-2 px-3 sm:px-4 py-2 border-t border-zinc-200 dark:border-zinc-800 bg-transparent overflow-x-auto scrollbar-hide">
+        <div className="flex flex-wrap items-center gap-2 px-3 sm:px-4 py-2 border-t border-zinc-200 dark:border-zinc-800 bg-transparent overflow-x-auto scrollbar-hide">
+          <button type="button" onClick={() => setWebSearchMode(!webSearchMode)} disabled={loading || isTyping} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-google-sans text-[11px] font-bold transition-all shrink-0 disabled:opacity-50 ${webSearchMode ? 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800/50 text-blue-600 dark:text-blue-400' : 'border-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/60 text-zinc-500 dark:text-zinc-400'}`}>
+            <SearchIcon size={13} className={webSearchMode ? '' : 'opacity-70'} /> Web Search
+          </button>
+          <button type="button" onClick={() => setDeepThinkMode(!deepThinkMode)} disabled={loading || isTyping} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-google-sans text-[11px] font-bold transition-all shrink-0 disabled:opacity-50 ${deepThinkMode ? 'bg-indigo-50 border-indigo-200 dark:bg-indigo-900/20 dark:border-indigo-800/50 text-indigo-600 dark:text-indigo-400' : 'border-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/60 text-zinc-500 dark:text-zinc-400'}`}>
+            <BrainCircuit size={13} className={deepThinkMode ? '' : 'opacity-70'} /> Deep Think
+          </button>
+          
+          <div className="w-[1px] h-3 bg-zinc-200 dark:bg-zinc-700 mx-1 hidden sm:block"></div>
+          
           <button type="button" onClick={() => { if (!loading && !isTyping) { onSubmit("I'm ready to take a quick quiz on this concept."); } }} disabled={loading || isTyping} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/60 font-google-sans text-[11px] font-bold transition-all shrink-0 text-zinc-500 dark:text-zinc-400 disabled:opacity-50">
-            <BrainCircuit size={13} className="text-pink-500" /> Take Quiz
+            <CheckSquare size={13} className="text-pink-500" /> Take Quiz
           </button>
           <button type="button" onClick={() => { if (!loading && !isTyping) { onSubmit("Please show my current progress tracker and tell me what we should cover next."); } }} disabled={loading || isTyping} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/60 font-google-sans text-[11px] font-bold transition-all shrink-0 text-zinc-500 dark:text-zinc-400 disabled:opacity-50">
             <Target size={13} className="text-blue-500" /> Track Progress
           </button>
-          <div className="w-[1px] h-3 bg-zinc-200 dark:bg-zinc-700 mx-1"></div>
           <button type="button" onClick={() => setShowHistoryModal(true)} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/60 font-google-sans text-[11px] font-bold transition-all shrink-0 text-zinc-500 dark:text-zinc-400">
             <BarChart size={13} className="text-blue-500" /> Quiz History
           </button>
@@ -953,6 +912,9 @@ export default function StudyChatPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [lastAssistantIndex, setLastAssistantIndex] = useState<number>(-1);
 
+  const [webSearchMode, setWebSearchMode] = useState(false);
+  const [deepThinkMode, setDeepThinkMode] = useState(false);
+
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -1015,7 +977,7 @@ export default function StudyChatPage() {
     setMessages([{ role: 'user', content: userMessage }]);
 
     try {
-      const res = await sendStudyMessage(null, userMessage, { subject, level });
+      const res = await sendStudyMessage(null, userMessage, { subject, level }, undefined, { webSearch: webSearchMode, deepThink: deepThinkMode });
       setSessionId(res.sessionId);
       getStudySessions().then(setSessions);
 
@@ -1044,7 +1006,7 @@ export default function StudyChatPage() {
     setLoading(true);
 
     try {
-      const res = await sendStudyMessage(sessionId, text);
+      const res = await sendStudyMessage(sessionId, text, undefined, undefined, { webSearch: webSearchMode, deepThink: deepThinkMode });
       if (requestRef.current !== reqId) return;
 
       setMessages(prev => {
@@ -1073,7 +1035,7 @@ export default function StudyChatPage() {
     setLoading(true);
 
     try {
-      const res = await sendStudyMessage(sessionId, newText, undefined, index);
+      const res = await sendStudyMessage(sessionId, newText, undefined, index, { webSearch: webSearchMode, deepThink: deepThinkMode });
       if (requestRef.current !== reqId) return;
       setMessages([...truncatedMessages, { role: 'user', content: newText }, { role: 'assistant', content: res.content }]);
       setLastAssistantIndex(truncatedMessages.length + 1);
@@ -1242,9 +1204,19 @@ export default function StudyChatPage() {
                 </div>
               </div>
 
-              <div className="absolute bottom-0 left-0 right-0 z-30 p-3 sm:p-5 bg-gradient-to-t from-[#fafafa] via-[#fafafa] dark:from-[#050505] dark:via-[#050505] to-transparent pt-20 pointer-events-none">
-                <ActivePromptBar onSubmit={handleChatSubmit} onStop={handleStop} loading={loading} isTyping={isTyping} setShowHistoryModal={setShowHistoryModal} />
-              </div>
+              <div className="absolute inset-x-0 bottom-0 pointer-events-none pb-4 sm:pb-6 z-20 px-3 sm:px-6">
+            <ActivePromptBar 
+              onSubmit={(text: string) => handleChatSubmit(text)} 
+              onStop={handleStop} 
+              loading={loading} 
+              isTyping={isTyping}
+              setShowHistoryModal={setShowHistoryModal}
+              webSearchMode={webSearchMode}
+              setWebSearchMode={setWebSearchMode}
+              deepThinkMode={deepThinkMode}
+              setDeepThinkMode={setDeepThinkMode}
+            />
+          </div>
             </>
           )}
         </main>

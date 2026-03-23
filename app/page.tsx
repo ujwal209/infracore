@@ -7,7 +7,11 @@ import { Footer } from '@/components/landing/footer'
 import { 
   ArrowRight, Sparkles, CheckSquare, Square, Target, 
   Brain, Map, BookOpen, Rss, MessageSquareHeart, ChevronRight,
-  Zap
+  Zap,
+  AlertCircle,
+  Terminal,
+  Search,
+  BrainCircuit
 } from "lucide-react"
 
 export default function LandingPage() {
@@ -46,20 +50,22 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#18181b_1px,transparent_1px),linear-gradient(to_bottom,#18181b_1px,transparent_1px)] bg-[size:3rem_3rem] sm:bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_80%,transparent_100%)] sm:[mask-image:radial-gradient(ellipse_60%_60%_at_50%_0%,#000_80%,transparent_100%)] -z-20 opacity-60 dark:opacity-80" />
           
           {/* Unified Blue Glows */}
-          <div className="absolute top-[-5%] sm:top-[-10%] left-1/2 -translate-x-1/2 w-[120%] sm:w-[100%] max-w-[1000px] h-[300px] sm:h-[400px] bg-blue-500/15 dark:bg-blue-600/20 rounded-[100%] blur-[80px] sm:blur-[160px] pointer-events-none -z-10 animate-pulse duration-[4000ms]" />
-          <div className="absolute top-[10%] sm:top-[20%] left-[-20%] sm:left-[-10%] w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] bg-blue-400/10 dark:bg-blue-500/10 rounded-[100%] blur-[100px] sm:blur-[120px] pointer-events-none -z-10" />
-          <div className="absolute top-[10%] sm:top-[20%] right-[-20%] sm:right-[-10%] w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] bg-blue-500/10 dark:bg-blue-400/10 rounded-[100%] blur-[100px] sm:blur-[120px] pointer-events-none -z-10" />
+          <div className="absolute top-[-5%] sm:top-[-10%] left-1/2 -translate-x-1/2 w-[120%] sm:w-[100%] max-w-[1000px] h-[300px] sm:h-[400px] bg-blue-500/20 dark:bg-blue-600/30 rounded-[100%] blur-[80px] sm:blur-[160px] pointer-events-none -z-10 animate-pulse duration-[4000ms] mix-blend-screen" />
+          <div className="absolute top-[10%] sm:top-[20%] left-[-20%] sm:left-[-10%] w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] bg-indigo-500/15 dark:bg-indigo-500/20 rounded-[100%] blur-[100px] sm:blur-[120px] pointer-events-none -z-10 mix-blend-screen" />
+          <div className="absolute top-[10%] sm:top-[20%] right-[-20%] sm:right-[-10%] w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] bg-cyan-500/15 dark:bg-cyan-500/20 rounded-[100%] blur-[100px] sm:blur-[120px] pointer-events-none -z-10 mix-blend-screen" />
 
           <div className="max-w-[1400px] mx-auto px-5 sm:px-8 lg:px-12 relative flex flex-col items-center text-center z-10 w-full">
         
 
             {/* Fluid Responsive Headline - Unified Blue Gradient */}
-            <h1 className="font-google-sans text-[3rem] leading-[1.1] sm:text-[4rem] md:text-6xl lg:text-[7.5rem] lg:leading-[1.05] font-extrabold tracking-tighter mb-6 sm:mb-8 max-w-5xl text-zinc-900 dark:text-white drop-shadow-sm px-2">
-              Stop guessing.<br className="hidden sm:block" />
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400 dark:from-blue-400 dark:to-blue-300"> 
-                Start executing.
-              </span>
-            </h1>
+            <div className="animate-in fade-in zoom-in slide-in-from-bottom-8 duration-1000">
+              <h1 className="font-google-sans text-[3rem] leading-[1.1] sm:text-[4rem] md:text-6xl lg:text-[7.5rem] lg:leading-[1.05] font-extrabold tracking-tighter mb-6 sm:mb-8 max-w-5xl text-zinc-900 dark:text-white drop-shadow-sm px-2">
+                Stop guessing.<br className="hidden sm:block" />
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-500 to-cyan-500 dark:from-blue-500 dark:via-indigo-400 dark:to-cyan-400 drop-shadow-[0_0_20px_rgba(59,130,246,0.3)]"> 
+                  Start executing.
+                </span>
+              </h1>
+            </div>
 
             {/* Fluid Subtitle */}
             <p className="text-[16px] sm:text-[18px] lg:text-[22px] text-zinc-500 dark:text-zinc-400 font-medium leading-[1.6] sm:leading-relaxed max-w-2xl mb-10 sm:mb-12 px-4 sm:px-2">
@@ -67,10 +73,10 @@ export default function LandingPage() {
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto mb-16 sm:mb-24">
+            <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto mb-16 sm:mb-24 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-150 fill-mode-both">
               <button 
                 onClick={() => { const el = document.getElementById('cta'); if (el) el.scrollIntoView({ behavior: 'smooth' }) }} 
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-700 text-white font-google-sans font-bold px-8 sm:px-10 h-14 sm:h-16 rounded-full transition-all text-[16px] sm:text-[17px] shadow-[0_0_30px_rgba(37,99,235,0.3)] dark:shadow-[0_0_40px_rgba(37,99,235,0.2)] hover:shadow-[0_0_50px_rgba(37,99,235,0.4)] active:scale-95 hover:-translate-y-1 outline-none group"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-google-sans font-bold px-8 sm:px-10 h-14 sm:h-16 rounded-full transition-all text-[16px] sm:text-[17px] shadow-[0_0_30px_rgba(37,99,235,0.4)] dark:shadow-[0_0_40px_rgba(37,99,235,0.3)] hover:shadow-[0_0_60px_rgba(37,99,235,0.6)] active:scale-95 hover:-translate-y-1 outline-none group"
               >
                 Access Workspace <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
               </button>
@@ -83,13 +89,13 @@ export default function LandingPage() {
             </div>
 
             {/* Glassmorphic Feature Badges - Strict Blue Theme */}
-            <div className="flex flex-wrap justify-center gap-2.5 sm:gap-4 max-w-4xl px-2">
+            <div className="flex flex-wrap justify-center gap-3 sm:gap-4 max-w-4xl px-2 mt-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300 fill-mode-both">
               {[
                 { icon: <Brain size={14} className="sm:w-4 sm:h-4" />, label: 'General Assistant' },
-                { icon: <Map size={14} className="sm:w-4 sm:h-4" />, label: 'Roadmap Architect' },
                 { icon: <BookOpen size={14} className="sm:w-4 sm:h-4" />, label: 'Neural Study Buddy' },
-                { icon: <Rss size={14} className="sm:w-4 sm:h-4" />, label: 'Live Intelligence' },
-                { icon: <MessageSquareHeart size={14} className="sm:w-4 sm:h-4" />, label: 'Community Feedback' },
+                { icon: <BrainCircuit size={14} className="sm:w-4 sm:h-4" />, label: 'Deep Think' },
+                { icon: <Search size={14} className="sm:w-4 sm:h-4" />, label: 'Web Search' },
+                { icon: <Terminal size={14} className="sm:w-4 sm:h-4" />, label: 'Live Code Runner' }
               ].map((badge) => (
                 <div 
                   key={badge.label} 
@@ -134,12 +140,13 @@ export default function LandingPage() {
                 { title: 'Select Tool', desc: 'Switch instantly between career planning, math solving, or live industry news.', icon: <Zap size={28} /> },
                 { title: 'Execute', desc: 'Receive perfectly formatted lists, code blocks, and tables ready to be used.', icon: <Target size={28} /> }
               ].map((step, i) => (
-                <div key={i} className="flex flex-col p-8 sm:p-10 rounded-[2.5rem] bg-white dark:bg-[#0c0c0e] border border-zinc-200 dark:border-zinc-800 shadow-sm transition-all duration-500 hover:-translate-y-2 group hover:shadow-[0_0_40px_rgba(37,99,235,0.1)] dark:hover:shadow-[0_0_40px_rgba(37,99,235,0.15)] hover:border-blue-500/30 dark:hover:border-blue-500/30">
-                  <div className="w-16 h-16 rounded-2xl bg-zinc-50 dark:bg-[#111113] border border-zinc-100 dark:border-zinc-800 flex items-center justify-center mb-8 group-hover:scale-110 transition-all duration-500 shadow-sm text-blue-500 dark:text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-300 group-hover:bg-blue-50 dark:group-hover:bg-blue-500/10 group-hover:border-blue-200 dark:group-hover:border-blue-500/30">
+                <div key={i} className="flex flex-col p-8 sm:p-10 rounded-[2.5rem] bg-white dark:bg-[#0c0c0e] border border-zinc-200 dark:border-zinc-800 shadow-lg transition-all duration-500 hover:-translate-y-4 group hover:shadow-[0_20px_60px_rgba(37,99,235,0.15)] dark:hover:shadow-[0_20px_60px_rgba(37,99,235,0.2)] hover:border-blue-500/40 dark:hover:border-blue-500/40 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="w-16 h-16 rounded-2xl bg-zinc-50 dark:bg-[#111113] border border-zinc-100 dark:border-zinc-800 flex items-center justify-center mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-sm text-blue-500 dark:text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-300 group-hover:bg-blue-50 dark:group-hover:bg-blue-500/10 group-hover:border-blue-200 dark:group-hover:border-blue-500/30 relative z-10">
                     {step.icon}
                   </div>
-                  <h3 className="font-google-sans text-2xl font-bold text-zinc-900 dark:text-white tracking-tight mb-3">{step.title}</h3>
-                  <p className="text-[16px] text-zinc-500 dark:text-zinc-400 leading-relaxed font-medium">{step.desc}</p>
+                  <h3 className="font-google-sans text-2xl font-bold text-zinc-900 dark:text-white tracking-tight mb-3 relative z-10">{step.title}</h3>
+                  <p className="text-[16px] text-zinc-500 dark:text-zinc-400 leading-relaxed font-medium relative z-10">{step.desc}</p>
                 </div>
               ))}
             </div>
@@ -160,7 +167,7 @@ export default function LandingPage() {
           <div className="max-w-[800px] mx-auto px-5 sm:px-8 text-center relative z-10">
             
             {/* Responsive Huge Center Glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] sm:w-[600px] h-[250px] sm:h-[600px] bg-blue-500/10 dark:bg-blue-600/15 rounded-full blur-[80px] sm:blur-[140px] pointer-events-none -z-10" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[700px] h-[300px] sm:h-[700px] bg-blue-500/15 dark:bg-blue-500/20 rounded-full blur-[100px] sm:blur-[160px] pointer-events-none -z-10 animate-pulse duration-[3000ms]" />
 
             <h2 className="font-google-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tighter text-zinc-900 dark:text-white mb-4 sm:mb-6 leading-[1.05]">
               Ready to deploy?
@@ -230,11 +237,4 @@ export default function LandingPage() {
   )
 }
 
-// Quick fallback icon for the error state
-function AlertCircle({ size, className }: { size?: number, className?: string }) {
-  return (
-    <svg width={size || 24} height={size || 24} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
-    </svg>
-  )
-}
+// Handled via lucide-react now.

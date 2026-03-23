@@ -40,10 +40,16 @@ export function Navbar() {
   const [scrolled, setScrolled] = React.useState(false)
   const [user, setUser] = React.useState<{ id: string; avatar_url: string | null; email?: string; full_name?: string } | null>(null)
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false)
+  const [isLoading, setIsLoading] = React.useState(true)
   const dropdownRef = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
-    getSessionUser().then((data) => { if (data) setUser(data as any) })
+    getSessionUser().then((data) => { 
+      if (data) setUser(data as any) 
+      setIsLoading(false)
+    }).catch(() => {
+      setIsLoading(false)
+    })
     const handleScroll = () => setScrolled(window.scrollY > 20)
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
@@ -95,7 +101,9 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-3 relative z-[101]">
             <ThemeToggle />
             <div className="w-px h-5 bg-zinc-200 dark:bg-zinc-800 mx-2" />
-            {user ? (
+            {isLoading ? (
+              <div className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800 animate-pulse border border-zinc-200 dark:border-zinc-700 mx-2" />
+            ) : user ? (
               <div className="relative" ref={dropdownRef}>
                 <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:ring-2 ring-blue-500/50 dark:ring-blue-500/40 transition-all overflow-hidden border border-zinc-200 dark:border-zinc-700 outline-none shadow-sm">
                   {user.avatar_url ? <Image src={user.avatar_url} alt="Profile" width={40} height={40} className="object-cover w-full h-full" unoptimized /> : <User size={18} className="text-zinc-500 dark:text-zinc-400" />}
@@ -145,7 +153,11 @@ export function Navbar() {
             ))}
           </div>
           <div className="flex flex-col gap-3 mt-auto pt-8 border-t border-zinc-200/60 dark:border-zinc-800/60">
-            {user ? (
+            {isLoading ? (
+              <div className="flex items-center justify-center p-4">
+                 <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : user ? (
               <div className="grid grid-cols-2 gap-3">
                 <Link href="/dashboard" onClick={() => setIsOpen(false)} className="py-4 flex flex-col items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-google-sans font-bold text-sm transition-all shadow-md"><LayoutDashboard size={20} /> Dashboard</Link>
                 <button onClick={() => { handleLogout(); setIsOpen(false); }} className="py-4 flex flex-col items-center justify-center gap-2 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-2xl font-google-sans font-bold text-sm transition-all"><LogOut size={20} /> Log Out</button>
