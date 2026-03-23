@@ -15,10 +15,8 @@ import {
 const AVATARS = [
   {
     title: "Neural Study Buddy",
-    shortName: "Study",
-    label: "Scholar",
     description: (
-      <ul className="list-disc pl-5 space-y-2 mt-2 font-outfit text-zinc-500 dark:text-zinc-400">
+      <ul className="list-disc pl-5 space-y-3 mt-4 font-outfit text-zinc-500 dark:text-zinc-400">
         <li>Personalized AI tutoring</li>
         <li>Adaptive quiz generation</li>
         <li>Complex query resolution</li>
@@ -29,10 +27,8 @@ const AVATARS = [
   },
   {
     title: "General Assistant",
-    shortName: "Assistant",
-    label: "Core AI",
     description: (
-      <ul className="list-disc pl-5 space-y-2 mt-2 font-outfit text-zinc-500 dark:text-zinc-400">
+      <ul className="list-disc pl-5 space-y-3 mt-4 font-outfit text-zinc-500 dark:text-zinc-400">
         <li>Multi-domain query handling</li>
         <li>Advanced problem solving</li>
         <li>Intelligent content generation</li>
@@ -59,10 +55,10 @@ export default function HeroHighlight() {
         }
       `}} />
 
-      <div className="font-outfit w-full min-h-screen bg-white dark:bg-[#050505] transition-colors duration-300 relative pb-24 overflow-hidden">
+      <div className="font-outfit w-full min-h-screen bg-[#fafafa] dark:bg-[#050505] transition-colors duration-300 relative pb-24 overflow-hidden">
         
-        {/* Subtle top glow to blend with navbar if needed */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] max-w-[800px] h-[300px] bg-blue-500/5 dark:bg-blue-600/5 rounded-full blur-[120px] pointer-events-none -z-10" />
+        {/* Subtle top glow to blend with navbar if needed - Kept solid, no multi-color gradient */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] max-w-[800px] h-[300px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none -z-10" />
 
         <div className="max-w-[1400px] mx-auto flex flex-col gap-16 md:gap-24 pt-8 md:pt-12 tracking-tight px-4 sm:px-6 lg:px-8">
           
@@ -70,7 +66,7 @@ export default function HeroHighlight() {
           <section className="relative w-full flex flex-col mt-4 md:mt-8">
             
             {/* Grid Container */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 w-full pb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 w-full pb-8">
               {AVATARS.map((avatar, i) => {
                 return (
                   <div 
@@ -81,54 +77,44 @@ export default function HeroHighlight() {
                       href={avatar.href}
                       className="group relative block w-full outline-none h-full"
                     >
-                      <div className={`relative flex flex-col h-full bg-white dark:bg-[#0c0c0e] border border-zinc-200/80 dark:border-zinc-800/80 rounded-[2rem] md:rounded-[2.5rem] transition-all duration-500 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.4)] overflow-hidden min-h-[380px] hover:-translate-y-1`}>
+                      <div className="relative flex flex-col h-full bg-white dark:bg-[#0c0c0e] border border-zinc-200 dark:border-zinc-800 rounded-[2rem] md:rounded-[2.5rem] transition-all duration-500 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-[0_20px_60px_-15px_rgba(37,99,235,0.15)] dark:hover:shadow-[0_20px_60px_-15px_rgba(37,99,235,0.3)] overflow-hidden min-h-[380px] hover:-translate-y-1.5">
                         
-                        {/* Subtle hover gradient overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 via-blue-500/0 to-blue-500/5 dark:to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-
                         {/* CONTENT BLOCK */}
                         <div className="p-8 md:p-10 flex flex-col flex-1 justify-between relative z-10">
                           
-                          {/* Branding Identity Row */}
-                          <div className="flex items-center justify-between mb-8">
-                            <div className="flex items-center gap-4">
-                              <div className="relative w-14 h-14 md:w-16 md:h-16 shrink-0 bg-zinc-50 dark:bg-[#111] border border-zinc-100 dark:border-zinc-800 rounded-2xl flex items-center justify-center p-3 shadow-sm group-hover:shadow-md transition-all duration-300 overflow-hidden">
-                                <Image 
-                                  src="/logo.png" 
-                                  fill 
-                                  alt="Brand Logo" 
-                                  className="dark:invert object-contain p-2.5 opacity-80 group-hover:opacity-100 transition-opacity relative z-10" 
-                                />
-                              </div>
-                              <div className="h-8 w-px bg-zinc-200 dark:bg-zinc-800" />
-                              <span className="font-google-sans text-2xl md:text-3xl font-bold text-zinc-900 dark:text-white uppercase tracking-tighter">
-                                {avatar.shortName}
-                              </span>
+                          {/* Top Title Row */}
+                          <div className="flex items-center gap-4 mb-8">
+                            <div className="relative w-14 h-14 md:w-16 md:h-16 shrink-0 bg-zinc-50 dark:bg-[#111113] border border-zinc-200 dark:border-zinc-800 rounded-2xl flex items-center justify-center p-3 shadow-sm group-hover:border-blue-200 dark:group-hover:border-blue-900/50 transition-colors duration-300 overflow-hidden">
+                              <Image 
+                                src="/logo.png" 
+                                fill 
+                                alt="Brand Logo" 
+                                className="dark:invert object-contain p-2.5 opacity-80 group-hover:opacity-100 transition-opacity relative z-10" 
+                              />
                             </div>
-                            <span className="hidden sm:inline-flex items-center px-4 py-1.5 bg-zinc-100 dark:bg-zinc-900 text-[11px] font-bold uppercase tracking-widest rounded-full border border-zinc-200/80 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400">
-                              {avatar.label}
-                            </span>
+                            <div className="h-10 w-px bg-zinc-200 dark:bg-zinc-800" />
+                            <h3 className="font-google-sans text-2xl md:text-3xl lg:text-[2rem] font-extrabold text-zinc-900 dark:text-white tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 leading-tight">
+                              {avatar.title}
+                            </h3>
                           </div>
 
                           {/* Detailed Explanation Area */}
                           <div className="space-y-4 mb-12">
-                            <h3 className="font-google-sans text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-zinc-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
-                              {avatar.title}
-                            </h3>
-                            <div className="text-zinc-600 dark:text-zinc-400 text-base md:text-[17px] font-medium leading-relaxed max-w-xl">
+                            <div className="text-zinc-600 dark:text-zinc-400 text-[17px] md:text-[18px] font-medium leading-relaxed max-w-xl transition-colors duration-300 group-hover:text-zinc-900 dark:group-hover:text-zinc-300">
                               {avatar.description}
                             </div>
                           </div>
 
-                          {/* Action Row - Clean text with circular arrow button */}
-                          <div className="mt-auto pt-6 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between relative">
+                          {/* Action Row - Solid Blue Effects */}
+                          <div className="mt-auto pt-8 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between relative">
                             <div className="flex items-center gap-2">
-                              <span className="font-google-sans text-sm md:text-base font-bold text-zinc-500 dark:text-zinc-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 tracking-wider uppercase transition-colors duration-300">
+                              <span className="font-google-sans text-sm md:text-base font-bold text-zinc-500 dark:text-zinc-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 tracking-widest uppercase transition-colors duration-300">
                                 Initialize Agent
                               </span>
                             </div>
-                            <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 flex items-center justify-center transition-all duration-300 group-hover:bg-blue-600 group-hover:border-blue-600 group-hover:text-white group-hover:shadow-[0_8px_20px_rgba(37,99,235,0.25)]">
-                              <ArrowRight size={22} className="group-hover:-rotate-45 transition-transform duration-300 group-hover:text-white" />
+                            {/* The Button */}
+                            <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-zinc-100 dark:bg-[#111113] border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 flex items-center justify-center transition-all duration-300 group-hover:bg-blue-600 group-hover:border-blue-600 group-hover:text-white group-hover:shadow-[0_8px_25px_rgba(37,99,235,0.4)]">
+                              <ArrowRight size={24} className="group-hover:-rotate-45 transition-transform duration-300 group-hover:text-white group-hover:scale-110" />
                             </div>
                           </div>
 
