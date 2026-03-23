@@ -361,7 +361,7 @@ const BaseMarkdownComponents = {
   },
 };
 
-export const getMarkdownComponents = ({ sessionId = '', onAnswerSubmitted = null, isLast = false, isTyping = false }: any = {}) => {
+export const getMarkdownComponents = ({ sessionId = '', onAnswerSubmitted = null, isLast = false, isTyping = false, messageIndex = 0 }: any = {}) => {
   return {
     ...BaseMarkdownComponents,
     code: ({ node, className, inline, children, ...props }: any) => {
@@ -384,6 +384,13 @@ export const getMarkdownComponents = ({ sessionId = '', onAnswerSubmitted = null
         }
 
         if (parsed && (parsed.component === 'QuizWidget' || parsed.component === 'ProgressWidget')) {
+          const aiMessageNumber = Math.floor(messageIndex / 2) + 1;
+          const isMultipleOfSeven = messageIndex > 0 && (aiMessageNumber % 7 === 0);
+          
+          if (!isMultipleOfSeven) {
+            return null; // Hard ban the widget from rendering on the frontend!
+          }
+
           if (parsed.component === 'QuizWidget') return <QuizWidget {...parsed.props} sessionId={sessionId} onAnswerSubmitted={onAnswerSubmitted} isHistorical={!isLast} />;
           if (parsed.component === 'ProgressWidget') return <ProgressWidget {...parsed.props} />;
         }
@@ -586,8 +593,8 @@ const MessageItem = React.memo(({ m, index, isLast, loading, isTypingGlobal, isL
   const showLoader = isStreaming && isNewAssistant && isLocallyTyping;
 
   const memoizedComponents = useMemo(() => {
-    return getMarkdownComponents({ sessionId, onAnswerSubmitted, isLast, isTyping: isTypingGlobal });
-  }, [sessionId, onAnswerSubmitted, isLast, isTypingGlobal]);
+    return getMarkdownComponents({ sessionId, onAnswerSubmitted, isLast, isTyping: isTypingGlobal, messageIndex: index });
+  }, [sessionId, onAnswerSubmitted, isLast, isTypingGlobal, index]);
 
   if (isEditing) {
     return (
