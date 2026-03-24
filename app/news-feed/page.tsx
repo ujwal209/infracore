@@ -231,7 +231,7 @@ function NewsContent() {
                     {sidebarArticles.map((article: any, index: number) => (
                       <Link
                         key={article.url || index}
-                        href={`/news/article?data=${safeStringify(article)}`}
+                        href={`/news-feed/article?data=${safeStringify(article)}`}
                         className="group flex flex-col items-start gap-2 p-4 -mx-4 rounded-2xl hover:bg-white dark:hover:bg-[#0c0c0e] border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800 hover:shadow-sm transition-all duration-300"
                       >
                         <div className="flex items-center gap-2 font-google-sans text-[10px] font-bold uppercase tracking-widest text-zinc-500">
@@ -265,7 +265,7 @@ function NewsContent() {
                     {gridArticles.map((article: any, index: number) => (
                       <Link
                         key={article.url || index}
-                        href={`/news/article?data=${safeStringify(article)}`}
+                        href={`/news-feed/article?data=${safeStringify(article)}`}
                         className="group flex flex-col justify-between rounded-[2rem] bg-white dark:bg-[#0c0c0e] border border-zinc-200 dark:border-zinc-800 transition-all duration-300 hover:border-blue-300 dark:hover:border-blue-900/50 hover:shadow-[0_15px_40px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_15px_40px_rgba(0,0,0,0.3)] hover:-translate-y-1.5 overflow-hidden"
                       >
                         {/* GRID IMAGE CONTAINER */}
