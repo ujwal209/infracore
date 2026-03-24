@@ -7,21 +7,8 @@ import { Navbar } from '@/components/landing/navbar'
 import { Footer } from '@/components/landing/footer'
 
 export default function FeaturesPage() {
-  // Restructured for a 5-item bento grid with a cohesive Blue/Cyan/Indigo theme
+  // Restructured for a 4-item bento grid with Neural Study Buddy first
   const features = [
-    { 
-      title: 'General Assistant', 
-      desc: [
-        'Handles diverse and complex queries',
-        'Delivers structured and precise responses',
-        'Assists in high-quality writing and content',
-        'Enables effective problem-solving and analysis'
-      ],
-      colSpan: 'md:col-span-2',
-      color: 'text-blue-500',
-      bg: 'bg-blue-50 dark:bg-blue-500/10 border-blue-100 dark:border-blue-500/20',
-      glow: 'hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-xl dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)]'
-    },
     { 
       title: 'Neural Study Buddy', 
       desc: [
@@ -33,6 +20,19 @@ export default function FeaturesPage() {
       colSpan: 'md:col-span-1',
       color: 'text-sky-500',
       bg: 'bg-sky-50 dark:bg-sky-500/10 border-sky-100 dark:border-sky-500/20',
+      glow: 'hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-xl dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)]'
+    },
+    { 
+      title: 'General Assistant', 
+      desc: [
+        'Handles diverse and complex queries',
+        'Delivers structured and precise responses',
+        'Assists in high-quality writing and content',
+        'Enables effective problem-solving and analysis'
+      ],
+      colSpan: 'md:col-span-1',
+      color: 'text-blue-500',
+      bg: 'bg-blue-50 dark:bg-blue-500/10 border-blue-100 dark:border-blue-500/20',
       glow: 'hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-xl dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)]'
     },
     { 
@@ -56,6 +56,7 @@ export default function FeaturesPage() {
         'Highlights valuable suggestions and trends',
         'Improves quality through shared feedback'
       ],
+      colSpan: 'md:col-span-1',
       color: 'text-cyan-500',
       bg: 'bg-cyan-50 dark:bg-cyan-500/10 border-cyan-100 dark:border-cyan-500/20',
       glow: 'hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-xl dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)]'

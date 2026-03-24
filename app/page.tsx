@@ -2,18 +2,14 @@
 
 import * as React from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/utils/supabase/client'
 import { Navbar } from '@/components/landing/navbar'
 import { Footer } from '@/components/landing/footer'
 import { 
   ArrowRight, Sparkles, CheckSquare, Square, Target, 
   Brain, Map, BookOpen, Rss, MessageSquareHeart, ChevronRight,
-  Zap,
-  AlertCircle,
-  Terminal,
-  Search,
-  BrainCircuit,
-  Loader2,
-  Send
+  Zap, AlertCircle, Terminal, Search, BrainCircuit, Loader2, Send
 } from "lucide-react"
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -59,6 +55,8 @@ const DemoComponents: any = {
 }
 
 export default function LandingPage() {
+  const router = useRouter()
+  const [isCheckingAuth, setIsCheckingAuth] = React.useState(true)
   const [agreed, setAgreed] = React.useState(false)
   const [error, setError] = React.useState(false)
   
@@ -68,12 +66,28 @@ export default function LandingPage() {
   const [demoLoading, setDemoLoading] = React.useState(false)
   const [promptsUsed, setPromptsUsed] = React.useState(0)
 
+  // Auth Check Effect
   React.useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (session) {
+        router.push('/dashboard')
+      } else {
+        setIsCheckingAuth(false)
+      }
+    }
+    checkAuth()
+  }, [router])
+
+  React.useEffect(() => {
+    if (isCheckingAuth) return; // Don't run this until we know they are staying on the page
     const used = parseInt(localStorage.getItem('demo_prompts_used') || '0', 10);
     setPromptsUsed(used);
     const savedMsgs = localStorage.getItem('demo_messages');
     if (savedMsgs) setDemoMessages(JSON.parse(savedMsgs));
-  }, []);
+  }, [isCheckingAuth]);
 
   const handleSignupClick = (e: React.MouseEvent) => {
     if (!agreed) {
@@ -117,6 +131,15 @@ export default function LandingPage() {
       setDemoLoading(false);
     }
   };
+
+  // Prevent flash of landing page while checking session
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-[#fafafa] dark:bg-[#050505] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -214,9 +237,6 @@ export default function LandingPage() {
                   <div className="h-5 w-[1px] bg-zinc-300 dark:bg-zinc-700 hidden sm:block"></div>
                   <span className="hidden sm:inline-block text-zinc-500 dark:text-zinc-400 font-google-sans text-xs sm:text-sm font-bold tracking-wide uppercase mt-0.5">Neural Engine Console</span>
                 </div>
-                <span className={`text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-widest ${promptsUsed >= 3 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}`}>
-                  {promptsUsed >= 3 ? 'Demo Expired' : `${3 - promptsUsed} Prompts Left`}
-                </span>
               </div>
               <div className="flex-1 p-5 overflow-y-auto flex flex-col gap-4 custom-scrollbar">
                 {demoMessages.length === 0 && (

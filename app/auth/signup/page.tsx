@@ -8,8 +8,8 @@ import { useTheme } from 'next-themes'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { 
-  Loader2, Eye, EyeOff, ShieldCheck, 
-  Target, Layers, ChevronRight, Fingerprint, AlertCircle, Sun, Moon
+  Loader2, Eye, EyeOff, 
+  AlertCircle, Sun, Moon
 } from "lucide-react"
 import { initiateSignup, verifySignupOtp, signupWithGoogleAction } from '@/app/actions/auth/signup'
 
@@ -23,10 +23,10 @@ function AuthThemeToggle() {
   return (
     <button
       onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-      className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-all border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700 flex items-center justify-center"
+      className="p-2.5 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors border border-transparent flex items-center justify-center"
       aria-label="Toggle Dark Mode"
     >
-      {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+      {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
     </button>
   )
 }
@@ -110,107 +110,92 @@ export default function SignupPage() {
   }
 
   const isOtpFormValid = () => {
-    // Unlocks the submit button only when 8 digits are entered
     if (userDataCache?.email && emailOtp.length < 8) return false
     if (userDataCache?.phone && phoneOtp.length < 8) return false
     return true
   }
 
   return (
-    <div className="min-h-screen w-full bg-zinc-50 dark:bg-[#0a0a0a] font-sans selection:bg-blue-500/30 selection:text-blue-900 flex flex-col lg:flex-row transition-colors duration-300">
+    <div className="min-h-screen w-full bg-white dark:bg-[#0a0a0a] font-sans selection:bg-blue-500/30 flex flex-col lg:flex-row">
       
       {/* ================= LEFT PANEL ================= */}
-      <div className="hidden lg:flex w-[45%] fixed inset-y-0 left-0 bg-zinc-950 flex-col justify-center p-12 xl:p-16 overflow-hidden z-10 border-r border-zinc-800">
-        <div className="absolute inset-0 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:32px_32px] opacity-40" />
-        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] -mt-20 -ml-20 pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="hidden lg:flex w-[45%] fixed inset-y-0 left-0 bg-zinc-950 flex-col justify-center p-12 xl:p-16 border-r border-zinc-800 z-10">
+        
+        {/* Subtle grid background, strictly monochrome */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:32px_32px]" />
 
         <div className="absolute top-10 left-10 xl:left-12 z-20">
-          <Link href="/" className="inline-flex items-center group hover:opacity-80 transition-opacity">
-            <div className="relative w-40 h-12 origin-left">
+          <Link href="/" className="inline-flex items-center hover:opacity-80 transition-opacity">
+            <div className="relative w-36 h-10 origin-left">
               <Image src="/logo.png" alt="InferaCore Logo" fill className="object-contain object-left dark:invert invert" priority />
             </div>
           </Link>
         </div>
 
         <div className="relative z-10 w-full max-w-md mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-md shadow-sm">
-            <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
-            <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Platform Active</span>
-          </div>
-          
-          <h1 className="text-4xl xl:text-5xl font-bold text-white tracking-tight uppercase leading-[1.1] mb-6">
+          <h1 className="text-4xl font-bold text-white tracking-tight leading-tight mb-4">
             Launch Your <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-200">Career</span>
+            <span className="text-blue-500">Career</span>
           </h1>
           
-          <p className="text-zinc-400 text-sm font-medium leading-relaxed mb-10">
+          <p className="text-zinc-400 text-[15px] leading-relaxed mb-12">
             Join the premier engineering career platform. Stop guessing what the market wants, and start building the skills that land your dream job.
           </p>
           
-          <div className="space-y-4">
-             <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors group">
-                <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center shrink-0 border border-zinc-700 group-hover:border-blue-500/50 transition-colors">
-                  <Layers className="text-blue-400" size={16} />
-                </div>
-                <div>
-                  <h4 className="text-[11px] font-bold text-white uppercase tracking-wider mb-1">Live Market Insights</h4>
-                  <p className="text-xs text-zinc-400 font-medium">Real-time job market trends across engineering disciplines.</p>
-                </div>
+          <div className="space-y-6">
+             <div className="pl-4 border-l-2 border-zinc-800">
+                <h4 className="text-sm font-bold text-white mb-1">Live Market Insights</h4>
+                <p className="text-[13px] text-zinc-500 leading-relaxed">Real-time job market trends across engineering disciplines.</p>
              </div>
-             <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors group">
-                <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center shrink-0 border border-zinc-700 group-hover:border-blue-500/50 transition-colors">
-                  <Target className="text-blue-400" size={16} />
-                </div>
-                <div>
-                  <h4 className="text-[11px] font-bold text-white uppercase tracking-wider mb-1">Smart Career Roadmaps</h4>
-                  <p className="text-xs text-zinc-400 font-medium">AI identifies missing skills between you and your target role.</p>
-                </div>
+
+             <div className="pl-4 border-l-2 border-zinc-800">
+                <h4 className="text-sm font-bold text-white mb-1">Smart Career Roadmaps</h4>
+                <p className="text-[13px] text-zinc-500 leading-relaxed">AI identifies missing skills between you and your target role.</p>
              </div>
           </div>
         </div>
 
-        <div className="absolute bottom-10 left-10 xl:left-12 right-10 xl:right-12 z-10 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-zinc-500 border-t border-zinc-800 pt-6">
+        <div className="absolute bottom-10 left-10 xl:left-12 right-10 xl:right-12 z-10 flex items-center justify-between text-xs font-medium text-zinc-600 border-t border-zinc-800 pt-6">
            <span>© 2026 INFERACORE</span>
-           <span className="flex items-center gap-2">
-             <Fingerprint size={12} className="text-blue-500"/> Connection Secure
-           </span>
+           <span>System Operational</span>
         </div>
       </div>
 
       {/* ================= RIGHT PANEL ================= */}
       <div className="w-full lg:w-[55%] lg:ml-[45%] flex flex-col min-h-screen relative bg-zinc-50 dark:bg-[#0a0a0a]">
-        <div className="hidden lg:block absolute top-10 right-10 z-50">
+        
+        <div className="hidden lg:block absolute top-8 right-8 z-50">
           <AuthThemeToggle />
         </div>
 
-        <div className="lg:hidden h-20 flex-shrink-0 flex items-center justify-between px-6 bg-white dark:bg-[#0a0a0a] border-b border-zinc-200 dark:border-zinc-800 z-30 sticky top-0 shadow-sm">
-          <Link href="/" className="inline-flex items-center group">
-            <div className="relative w-32 h-10 origin-left">
+        {/* MOBILE HEADER */}
+        <div className="lg:hidden h-16 flex-shrink-0 flex items-center justify-between px-6 bg-white dark:bg-[#0a0a0a] border-b border-zinc-200 dark:border-zinc-800 z-30 sticky top-0">
+          <Link href="/" className="inline-flex items-center">
+            <div className="relative w-28 h-8 origin-left">
               <Image src="/logo.png" alt="InferaCore Logo" fill className="object-contain object-left dark:invert" priority />
             </div>
           </Link>
           <AuthThemeToggle />
         </div>
 
-        <main className="flex-1 flex flex-col px-4 py-8 sm:px-8 lg:px-12 justify-center">
-          <div className="w-full max-w-[640px] mx-auto relative animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <main className="flex-1 flex flex-col px-4 py-12 sm:px-8 lg:px-12 justify-center">
+          <div className="w-full max-w-[460px] mx-auto relative">
             
-            <div className="bg-white dark:bg-[#111113] rounded-[2rem] shadow-sm border-2 border-zinc-200 dark:border-zinc-800/80 p-8 sm:p-10 relative z-10 w-full">
+            <div className="bg-white dark:bg-[#111113] rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-8 sm:p-10 w-full">
               
-              <div className="mb-8 text-center sm:text-left">
-                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white mb-2 uppercase">
+              <div className="mb-8 text-left">
+                <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white mb-2">
                   {step === 'form' ? 'Create Account' : 'Verify Details'}
                 </h2>
-                <p className="text-zinc-500 dark:text-zinc-400 text-sm font-medium leading-relaxed">
+                <p className="text-zinc-500 dark:text-zinc-400 text-[14px]">
                   {step === 'form' ? 'Enter an Email, a Phone Number, or both.' : 'Enter the verification codes sent to you.'}
                 </p>
               </div>
 
               {error && (
-                <div className="mb-6 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 p-4 rounded-xl flex items-start gap-3 text-red-600 dark:text-red-400 animate-in fade-in zoom-in-95">
-                  <AlertCircle size={18} className="mt-0.5 shrink-0" />
-                  <p className="text-xs font-semibold leading-relaxed">{error}</p>
+                <div className="mb-6 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 p-3 rounded-lg flex items-start gap-2 text-red-600 dark:text-red-400">
+                  <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                  <p className="text-sm font-medium">{error}</p>
                 </div>
               )}
 
@@ -222,11 +207,11 @@ export default function SignupPage() {
                       onClick={handleGoogleSignup}
                       disabled={loading}
                       variant="outline" 
-                      className="w-full h-12 sm:h-14 rounded-2xl border-2 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all shadow-sm flex items-center justify-center bg-white dark:bg-zinc-900"
+                      className="w-full h-12 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors flex items-center justify-center bg-white dark:bg-[#111113]"
                     >
-                      {loading ? <Loader2 className="animate-spin text-zinc-400" size={20} /> : (
+                      {loading ? <Loader2 className="animate-spin text-zinc-400" size={18} /> : (
                         <>
-                          <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
                             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
@@ -242,126 +227,121 @@ export default function SignupPage() {
                     <div className="absolute inset-0 flex items-center">
                       <div className="w-full border-t border-zinc-200 dark:border-zinc-800" />
                     </div>
-                    <div className="relative flex justify-center text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-                      <span className="bg-white dark:bg-[#111113] px-4">Or sign up manually</span>
+                    <div className="relative flex justify-center text-xs font-medium text-zinc-500">
+                      <span className="bg-white dark:bg-[#111113] px-2 text-zinc-400">Or continue manually</span>
                     </div>
                   </div>
 
-                  <form className="space-y-5" onSubmit={handleSignupSubmit}>
+                  <form className="space-y-4" onSubmit={handleSignupSubmit}>
                     
-                    <div className="space-y-2">
-                      <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 ml-1">Full Name</label>
-                      <Input name="name" required className="h-12 sm:h-14 px-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 font-bold text-zinc-900 dark:text-white" placeholder="John Doe" />
+                    <div className="space-y-1.5">
+                      <label className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-300">Full Name</label>
+                      <Input name="name" required className="h-11 px-3 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white focus-visible:ring-1 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-500 transition-colors" placeholder="John Doe" />
                     </div>
                     
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                      <div className="space-y-2">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 ml-1">Email (Optional)</label>
-                        <Input name="email" type="email" className="h-12 sm:h-14 px-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 font-bold text-zinc-900 dark:text-white" placeholder="user@inferacore.com" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-300">Email (Optional)</label>
+                        <Input name="email" type="email" className="h-11 px-3 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white focus-visible:ring-1 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-500 transition-colors" placeholder="user@example.com" />
                       </div>
 
-                      <div className="space-y-2">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 ml-1">Phone (Optional)</label>
+                      <div className="space-y-1.5">
+                        <label className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-300">Phone (Optional)</label>
                         <div className="relative">
-                          <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-zinc-400">+91</span>
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] font-medium text-zinc-500">+91</span>
                           <Input 
                             name="phone" 
                             type="tel" 
-                            className="h-12 sm:h-14 pl-12 pr-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 font-bold text-zinc-900 dark:text-white" 
+                            className="h-11 pl-10 pr-3 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white focus-visible:ring-1 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-500 transition-colors" 
                             placeholder="98765 43210" 
                           />
                         </div>
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                      <div className="space-y-2">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 ml-1">Password</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                      <div className="space-y-1.5">
+                        <label className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-300">Password</label>
                         <div className="relative">
-                          <Input name="password" type={showPassword ? "text" : "password"} required className="h-12 sm:h-14 pl-5 pr-12 rounded-2xl font-bold bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white" placeholder="••••••••" />
-                          <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 p-1">
-                            {showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}
+                          <Input name="password" type={showPassword ? "text" : "password"} required className="h-11 pl-3 pr-10 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white focus-visible:ring-1 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-500 transition-colors font-mono" placeholder="••••••••" />
+                          <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
+                            {showPassword ? <EyeOff size={16}/> : <Eye size={16}/>}
                           </button>
                         </div>
                       </div>
                       
-                      <div className="space-y-2">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 ml-1">Confirm</label>
+                      <div className="space-y-1.5">
+                        <label className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-300">Confirm</label>
                         <div className="relative">
-                          <Input name="confirmPassword" type={showConfirmPassword ? "text" : "password"} required className="h-12 sm:h-14 pl-5 pr-12 rounded-2xl font-bold bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white" placeholder="••••••••" />
-                          <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 p-1">
-                            {showConfirmPassword ? <EyeOff size={18}/> : <Eye size={18}/>}
+                          <Input name="confirmPassword" type={showConfirmPassword ? "text" : "password"} required className="h-11 pl-3 pr-10 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white focus-visible:ring-1 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-500 transition-colors font-mono" placeholder="••••••••" />
+                          <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
+                            {showConfirmPassword ? <EyeOff size={16}/> : <Eye size={16}/>}
                           </button>
                         </div>
                       </div>
                     </div>
                     
-                    <Button type="submit" disabled={loading} className="w-full bg-blue-600 text-white hover:bg-blue-500 font-bold h-12 sm:h-14 rounded-2xl uppercase mt-6 transition-all flex items-center justify-center gap-2 tracking-widest text-[13px]">
-                      {loading ? <Loader2 className="animate-spin" size={20} /> : <>Continue <ChevronRight size={18} strokeWidth={2.5} /></>}
+                    <Button type="submit" disabled={loading} className="w-full bg-blue-600 text-white hover:bg-blue-700 font-semibold h-11 rounded-lg mt-4 transition-colors flex items-center justify-center gap-2">
+                      {loading ? <Loader2 className="animate-spin" size={18} /> : "Continue"}
                     </Button>
                   </form>
                 </>
               ) : (
-                <form className="space-y-6 animate-in slide-in-from-right-8 duration-500" onSubmit={handleOtpSubmit}>
+                <form className="space-y-5" onSubmit={handleOtpSubmit}>
                   
-                  <div className={`grid grid-cols-1 ${userDataCache?.email && userDataCache?.phone ? 'sm:grid-cols-2 gap-6' : 'gap-4'}`}>
+                  <div className={`grid grid-cols-1 ${userDataCache?.email && userDataCache?.phone ? 'sm:grid-cols-2 gap-4' : 'gap-4'}`}>
                     
                     {userDataCache?.email && (
-                      <div className="space-y-3 text-center">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Email Code</label>
+                      <div className="space-y-1.5">
+                        <label className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-300">Email Code</label>
                         <Input 
                           value={emailOtp}
                           onChange={(e) => setEmailOtp(e.target.value)}
                           maxLength={8}
                           required
-                          className="h-16 sm:h-20 text-center text-xl sm:text-2xl font-mono font-bold tracking-[0.2em] sm:tracking-[0.3em] pl-[0.2em] sm:pl-[0.3em] rounded-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 focus:bg-white dark:focus:bg-zinc-800 transition-all uppercase shadow-inner text-zinc-900 dark:text-white" 
+                          className="h-12 text-center text-lg font-mono font-bold tracking-[0.2em] rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 focus-visible:ring-1 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-500 transition-colors uppercase text-zinc-900 dark:text-white" 
                           placeholder="--------" 
                         />
-                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mt-2 truncate px-2">Sent to {userDataCache.email}</p>
+                        <p className="text-[11px] text-zinc-500 truncate px-1">Sent to {userDataCache.email}</p>
                       </div>
                     )}
 
                     {userDataCache?.phone && (
-                      <div className="space-y-3 text-center">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">SMS Code</label>
+                      <div className="space-y-1.5">
+                        <label className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-300">SMS Code</label>
                         <Input 
                           value={phoneOtp}
                           onChange={(e) => setPhoneOtp(e.target.value)}
                           maxLength={8}
                           required
-                          className="h-16 sm:h-20 text-center text-xl sm:text-2xl font-mono font-bold tracking-[0.2em] sm:tracking-[0.3em] pl-[0.2em] sm:pl-[0.3em] rounded-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 focus:bg-white dark:focus:bg-zinc-800 transition-all uppercase shadow-inner text-zinc-900 dark:text-white" 
+                          className="h-12 text-center text-lg font-mono font-bold tracking-[0.2em] rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 focus-visible:ring-1 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-500 transition-colors uppercase text-zinc-900 dark:text-white" 
                           placeholder="--------" 
                         />
-                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mt-2">Sent to {userDataCache.phone}</p>
+                        <p className="text-[11px] text-zinc-500 mt-1">Sent to {userDataCache.phone}</p>
                       </div>
                     )}
                   </div>
                   
-                  <Button type="submit" disabled={loading || !isOtpFormValid()} className="w-full bg-blue-600 text-white hover:bg-blue-500 font-bold h-12 sm:h-14 rounded-2xl uppercase mt-4 transition-all tracking-widest text-[13px]">
-                    {loading ? <Loader2 className="animate-spin" size={20} /> : "Verify & Create Account"}
+                  <Button type="submit" disabled={loading || !isOtpFormValid()} className="w-full bg-blue-600 text-white hover:bg-blue-700 font-semibold h-11 rounded-lg mt-2 transition-colors flex items-center justify-center">
+                    {loading ? <Loader2 className="animate-spin" size={18} /> : "Verify & Create Account"}
                   </Button>
                   
-                  <button type="button" onClick={() => { setStep('form'); setError(null); }} className="w-full text-[11px] font-bold text-zinc-400 hover:text-zinc-900 dark:hover:text-white uppercase tracking-widest transition-colors mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                  <button type="button" onClick={() => { setStep('form'); setError(null); }} className="w-full text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors mt-2 text-center">
                     Need to change your details? Go Back
                   </button>
                 </form>
               )}
 
               {step === 'form' && (
-                <div className="mt-6 pt-5 border-t border-zinc-100 dark:border-zinc-800 text-center">
-                  <p className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center justify-center flex-wrap gap-2">
+                <div className="mt-8 text-center">
+                  <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
                     Already have an account? 
-                    <Link href="/auth/login" className="text-zinc-900 dark:text-white hover:text-blue-600 transition-colors border-b-2 border-transparent hover:border-blue-600 pb-0.5">
+                    <Link href="/auth/login" className="text-blue-600 dark:text-blue-500 hover:underline transition-colors ml-1.5">
                       Sign In
                     </Link>
                   </p>
                 </div>
               )}
-            </div>
-
-            <div className="mt-6 flex items-center justify-center gap-2 text-zinc-400 dark:text-zinc-500 shrink-0 pb-6">
-               <ShieldCheck size={16} className="text-blue-500" />
-               <span className="text-[10px] font-bold uppercase tracking-wider">End-to-End Encryption Active</span>
             </div>
             
           </div>
