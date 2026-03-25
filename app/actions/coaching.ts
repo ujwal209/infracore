@@ -2,34 +2,37 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/utils/supabase/server";
-import Mixedbread from '@mixedbread/sdk';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// --- LOCAL RAG UPLOAD HELPER ---
-async function uploadToLocalRAG(file: File, sessionId: string) {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('session_id', sessionId);
-  
-  const AGENT_URL = process.env.NEXT_PUBLIC_AGENT_URL || "http://127.0.0.1:8789";
-  const response = await fetch(`${AGENT_URL}/api/v1/upload-doc`, {
-    method: "POST",
-    body: formData,
-  });
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Local RAG Error: ${response.status} - ${errorText}`);
-  }
-  const result = await response.json();
-  return result.url;
-}
+const getAgentUrl = () => {
+  const url = process.env.NEXT_PUBLIC_AGENT_URL || process.env.AGENT_URL || "http://127.0.0.1:8789";
+  return url.replace(/\/$/, ""); 
+};
 
-// --- SESSION MANAGEMENT ---
+// 🚀 NEW: Creates the session FIRST so the frontend can upload files directly to Python
+export async function initializeSession(title: string) {
+  const supabaseAuth = await createServerClient();
+  const { data: { user } } = await supabaseAuth.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const sessionTitle = (title || "New Session").slice(0, 35) + '...';
+
+  const { data: session } = await supabaseAdmin
+    .from('chat_sessions')
+    .insert({
+      user_id: user.id,
+      title: sessionTitle
+    })
+    .select().single();
+
+  if (!session) throw new Error("Failed to initialize session");
+
+  return session.id;
+}
 
 export async function getSessions() {
   const supabaseAuth = await createServerClient();
@@ -61,138 +64,83 @@ export async function getChatMessages(sessionId: string) {
   return data || [];
 }
 
-// --- MAIN CHAT ACTION ---
-
+// 🚀 UPDATED: Now receives pre-uploaded file URLs from the frontend!
 export async function sendCoachingMessage(
-  sessionId: string | null, 
+  sessionId: string, 
   content: string, 
   model: string = 'gpt-4o',
-  truncateIndex?: number,
-  fileFormData?: FormData // Accept FormData to safely cross the Client-Server boundary
+  fileUrls: string[] = [], // No more FormData!
+  truncateIndex?: number
 ) {
   const supabaseAuth = await createServerClient();
   const { data: { user } } = await supabaseAuth.auth.getUser();
   if (!user) throw new Error("Unauthorized");
 
-  let currentSessionId = sessionId;
   let chatHistory: { role: string; content: string }[] = [];
 
-  // --- 1. Resolve Session ID first (needed for file upload) ---
-  if (!currentSessionId) {
-    const { data: session } = await supabaseAdmin
-      .from('chat_sessions')
-      .insert({ user_id: user.id, title: (content || "Uploaded File").slice(0, 35) + '...' })
-      .select().single();
-    
-    currentSessionId = session.id;
-  } else {
-    // SECURITY CHECK
-    const { data: sessionData, error: sessionError } = await supabaseAdmin
-      .from('chat_sessions')
-      .select('user_id')
-      .eq('id', currentSessionId)
-      .single();
+  const { data: pastMessages } = await supabaseAdmin
+    .from('chat_messages')
+    .select('role, content')
+    .eq('session_id', sessionId)
+    .order('created_at', { ascending: true });
 
-    if (sessionError || !sessionData || sessionData.user_id !== user.id) {
-      throw new Error("Unauthorized: Invalid session access.");
-    }
-
-    // FETCH CONTEXT
-    const { data: pastMessages } = await supabaseAdmin
-      .from('chat_messages')
-      .select('role, content')
-      .eq('session_id', currentSessionId)
-      .order('created_at', { ascending: true });
-
-    if (pastMessages) {
-      if (typeof truncateIndex === 'number' && truncateIndex < pastMessages.length) {
-        const { data: allMsgs } = await supabaseAdmin
-          .from('chat_messages')
-          .select('id')
-          .eq('session_id', currentSessionId)
-          .order('created_at', { ascending: true });
-          
-        if (allMsgs && truncateIndex < allMsgs.length) {
-          const idsToDelete = allMsgs.slice(truncateIndex).map(m => m.id);
-          await supabaseAdmin.from('chat_messages').delete().in('id', idsToDelete);
-        }
-        chatHistory = pastMessages.slice(0, truncateIndex);
-      } else {
-        chatHistory = pastMessages;
+  if (pastMessages) {
+    if (typeof truncateIndex === 'number' && truncateIndex < pastMessages.length) {
+      const { data: allMsgs } = await supabaseAdmin
+        .from('chat_messages')
+        .select('id')
+        .eq('session_id', sessionId)
+        .order('created_at', { ascending: true });
+        
+      if (allMsgs && truncateIndex < allMsgs.length) {
+        const idsToDelete = allMsgs.slice(truncateIndex).map(m => m.id);
+        await supabaseAdmin.from('chat_messages').delete().in('id', idsToDelete);
       }
+      chatHistory = pastMessages.slice(0, truncateIndex);
+    } else {
+      chatHistory = pastMessages;
     }
   }
 
-  // --- 2. FILE EXTRACTION & UPLOAD (Now that we have currentSessionId) ---
-  let files: File[] = [];
-  if (fileFormData && typeof fileFormData.getAll === 'function') {
-    files = fileFormData.getAll('files') as File[];
+  // Append file markdown to the database record so history renders correctly
+  if (fileUrls.length > 0) {
+    const imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
+    const fileMarkdown = fileUrls.map((url) => {
+      const ext = url.split('.').pop()?.toLowerCase();
+      const fileName = url.split('/').pop() || "Document";
+      if (ext && imageExtensions.includes(ext)) {
+        return `\n\n![${fileName}](${url})`;
+      } else {
+        return `\n\n[${fileName}](attachment)`;
+      }
+    }).join("");
+    content += fileMarkdown;
   }
 
-  let fileUrls: string[] = [];
-  if (files.length > 0) {
-    try {
-      // Parallel upload to Cloudinary/Local backend
-      const uploadPromises = files.map(file => uploadToLocalRAG(file, currentSessionId!));
-      fileUrls = await Promise.all(uploadPromises);
-      console.log(`✅ [RAG] Successfully uploaded ${files.length} files. URLs:`, fileUrls);
-      
-      // Append images to content for UI rendering if any
-      const imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
-      const imageMarkdown = fileUrls
-        .filter(url => {
-          const ext = url.split('.').pop()?.toLowerCase();
-          return ext && imageExtensions.includes(ext);
-        })
-        .map(url => `\n![Uploaded Image](${url})`)
-        .join("");
-      
-      content += imageMarkdown;
-    } catch (error: any) {
-      console.error("File upload error:", error);
-      throw new Error(`Failed to process files: ${error.message}`);
-    }
-  }
-
-  // 3. Save the NEW user message to the DB (Now includes image markdown)
-  await supabaseAdmin.from('chat_messages').insert({ 
-    session_id: currentSessionId, 
-    role: 'user', 
-    content: content 
-  });
+  await supabaseAdmin.from('chat_messages').insert({ session_id: sessionId, role: 'user', content });
 
   let finalContent = "";
-
-  // 4. Send request to Agent
   try {
-    const AGENT_URL = process.env.NEXT_PUBLIC_AGENT_URL || "http://127.0.0.1:8789";
+    const AGENT_URL = getAgentUrl();
     const response = await fetch(`${AGENT_URL}/api/v1/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ 
         message: content, 
         history: chatHistory,
-        sessionId: currentSessionId,
-        images: fileUrls // Pass URLs directly for Groq Vision
+        sessionId: sessionId,
+        images: fileUrls, // Pass URLs directly to Python
+        model: model 
       }),
     });
 
-    if (!response.ok) {
-       const errorText = await response.text();
-       throw new Error(`Agent Error: ${response.status} - ${errorText}`);
-    }
-
+    if (!response.ok) throw new Error(await response.text());
+    
     const data = await response.json();
     let rawContent = data.response || data.answer || data.message;
-
+    
     if (Array.isArray(rawContent)) {
-      finalContent = rawContent.map((block: any) => {
-        if (typeof block === 'string') return block;
-        if (block && typeof block === 'object') {
-          return block.text || block.content || JSON.stringify(block);
-        }
-        return String(block);
-      }).join('');
+      finalContent = rawContent.map((block: any) => typeof block === 'string' ? block : block.text || block.content || JSON.stringify(block)).join('');
     } else if (typeof rawContent === 'object' && rawContent !== null) {
       finalContent = rawContent.text || rawContent.content || JSON.stringify(rawContent);
     } else {
@@ -200,21 +148,16 @@ export async function sendCoachingMessage(
     }
 
   } catch (error: any) {
-    console.error("Fetch Error:", error);
-    finalContent = "### ⨯ ERROR\nNeural link disrupted. Could not reach local development server.";
+    console.error("Chat Error:", error);
+    if (error.message?.includes("413") || error.message?.includes("too large")) {
+      finalContent = "### ⨯ Conversation Too Large\nThis session has exceeded the processing limit. **Please start a new chat** to continue smoothly!";
+    } else {
+      finalContent = `### ⨯ Connection Disrupted\nFailed to reach the INFERA engine. \n**Details:** ${error.message}`;
+    }
   }
 
-  // 5. Save Assistant response to DB
-  await supabaseAdmin.from('chat_messages').insert({ 
-    session_id: currentSessionId, 
-    role: 'assistant', 
-    content: finalContent 
-  });
+  await supabaseAdmin.from('chat_messages').insert({ session_id: sessionId, role: 'assistant', content: finalContent });
+  await supabaseAdmin.from('chat_sessions').update({ updated_at: new Date().toISOString() }).eq('id', sessionId);
 
-  // 6. Update session timestamp
-  await supabaseAdmin.from('chat_sessions').update({ 
-    updated_at: new Date().toISOString() 
-  }).eq('id', currentSessionId);
-
-  return { sessionId: currentSessionId, content: finalContent, userContent: content };
+  return { sessionId: sessionId, content: finalContent };
 }

@@ -28,7 +28,8 @@ import {
   getQuizHistory,
   saveQuizResult,
   getStudyProgress,
-  upsertStudyProgress
+  upsertStudyProgress,
+  initializeSession
 } from '@/app/actions/study'
 
 const supabase = createClient()
@@ -419,7 +420,30 @@ export const CopyButton = ({ text, className = "" }: { text: string, className?:
   );
 };
 
-export const CodeCopyButton = ({ text }: { text: string }) => {
+export // 🚀 DIRECT UPLOAD HELPER (Bypass Vercel 4.5MB limit)
+const uploadFilesDirectly = async (files: File[], sessionId: string) => {
+  if (files.length === 0) return [];
+  
+  const AGENT_URL = (process.env.NEXT_PUBLIC_AGENT_URL || "http://127.0.0.1:8789").replace(/\/$/, "");
+  const uploadPromises = files.map(async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('session_id', sessionId);
+    
+    const response = await fetch(`${AGENT_URL}/api/v1/upload-doc`, {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!response.ok) throw new Error(`Upload Failed: ${file.name}`);
+    const data = await response.json();
+    return data.url as string;
+  });
+  
+  return Promise.all(uploadPromises);
+};
+
+const CodeCopyButton = ({ text }: { text: string }) => {
   const [copied, setCopied] = useState(false);
   const handleCopy = async () => {
     try {
@@ -1392,15 +1416,16 @@ export default function StudyChatPage() {
     setMessages([{ role: 'user', content: localDisplayMessage }]);
 
     try {
-      let fileFormData = undefined;
-      if (files.length > 0) {
-        fileFormData = new FormData();
-        files.forEach(f => fileFormData!.append('files', f));
-      }
-
-      const res = await sendStudyMessage(null, userMessage, { subject, level }, undefined, undefined, fileFormData);
-      setSessionId(res.sessionId);
+      // 🚀 STEP 1: INITIALIZE SESSION FIRST
+      const newSessionId = await initializeSession(subject, { subject, level });
+      setSessionId(newSessionId);
       getStudySessions().then(setSessions);
+
+      // 🚀 STEP 2: UPLOAD FILES DIRECTLY TO PYTHON
+      const uploadedUrls = await uploadFilesDirectly(files, newSessionId);
+
+      // 🚀 STEP 3: SEND MESSAGE WITH PRE-UPLOADED URLS
+      const res = await sendStudyMessage(newSessionId, userMessage, uploadedUrls, undefined, undefined);
 
       setMessages([{ role: 'user', content: localDisplayMessage }, { role: 'assistant', content: res.content }]);
       setLastAssistantIndex(1);
@@ -1444,13 +1469,19 @@ export default function StudyChatPage() {
     setLoading(true);
 
     try {
-      let fileFormData = undefined;
-      if (files.length > 0) {
-        fileFormData = new FormData();
-        files.forEach(f => fileFormData!.append('files', f));
+      // 🚀 ENSURE WE HAVE A SESSION (Bypass Vercel direct approach)
+      let targetSessionId = sessionId;
+      if (!targetSessionId) {
+        targetSessionId = await initializeSession(text.slice(0, 30));
+        setSessionId(targetSessionId);
+        getStudySessions().then(setSessions);
       }
 
-      const res = await sendStudyMessage(sessionId, text, undefined, undefined, undefined, fileFormData);
+      // 🚀 UPLOAD FILES DIRECTLY TO PYTHON
+      const uploadedUrls = await uploadFilesDirectly(files, targetSessionId);
+
+      // 🚀 SEND CHAT
+      const res = await sendStudyMessage(targetSessionId, text, uploadedUrls);
       if (requestRef.current !== reqId) return;
 
       setMessages(prev => {

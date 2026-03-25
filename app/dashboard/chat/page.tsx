@@ -8,7 +8,7 @@ import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import Image from 'next/image'
 import { 
   getSessions, deleteSession, renameSession, 
-  getChatMessages, sendCoachingMessage 
+  getChatMessages, sendCoachingMessage, initializeSession 
 } from '@/app/actions/coaching'
 import { 
   Search, Menu, X, RefreshCw, Sparkles, Plus, Send, Edit3, 
@@ -67,6 +67,29 @@ const CodeCopyButton = ({ text }: { text: string }) => {
       )}
     </button>
   );
+};
+
+// 🚀 DIRECT UPLOAD HELPER (Bypass Vercel 4.5MB limit)
+const uploadFilesDirectly = async (files: File[], sessionId: string) => {
+  if (files.length === 0) return [];
+  
+  const AGENT_URL = (process.env.NEXT_PUBLIC_AGENT_URL || "http://127.0.0.1:8789").replace(/\/$/, "");
+  const uploadPromises = files.map(async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('session_id', sessionId);
+    
+    const response = await fetch(`${AGENT_URL}/api/v1/upload-doc`, {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!response.ok) throw new Error(`Upload Failed: ${file.name}`);
+    const data = await response.json();
+    return data.url as string;
+  });
+  
+  return Promise.all(uploadPromises);
 };
 
 // --- SMOOTH HIGH SPEED TYPEWRITER HOOK ---
@@ -394,94 +417,92 @@ export default function AICoachingMentor() {
   };
 
   const submitPrompt = async (text: string, attachedFiles: File[] = [], deepSearch: boolean = false, webAccess: boolean = false) => {
-    if ((!text.trim() && attachedFiles.length === 0) || loading || isTyping) return;
-    const reqId = ++requestRef.current;
-    
-    setForceStop(false);
-
-    let optimisticText = text || "Uploaded files.";
-    if (attachedFiles.length > 0) {
-      const fileNames = attachedFiles.map(f => `📄 ${f.name}`).join('\n');
-      optimisticText = text ? `${text}\n\n${fileNames}` : fileNames;
-    }
-
-    setMessages(prev => [...prev, { role: 'user', content: optimisticText }]);
-    setLoading(true);
-    
-    try {
-      // Create FormData to securely send files across the Next.js boundary
-      let formData: FormData | undefined = undefined;
-      if (attachedFiles.length > 0) {
-        formData = new FormData();
-        attachedFiles.forEach(file => formData.append('files', file));
-      }
-
-      // Pass the formData directly into the Server Action
-      const res = await sendCoachingMessage(sessionId, text, 'default', undefined, formData);
-      if (requestRef.current !== reqId) return; 
+      if ((!text.trim() && attachedFiles.length === 0) || loading || isTyping) return;
+      const reqId = ++requestRef.current;
       
-      if (res?.sessionId) {
-        setSessionId(res.sessionId);
-        if (!sessionId) refreshSessions();
-      }
-      
-      const safeContent = getSafeResponseText(res);
-      
-      setMessages(prev => {
-        const newMsgs = [...prev];
-        // 🚀 Swap optimistic text for real content with image markdown
-        if (res?.userContent && newMsgs.length >= 1) {
-          newMsgs[newMsgs.length - 1] = { role: 'user', content: res.userContent };
+      setForceStop(false);
+      setLoading(true);
+  
+      try {
+        let targetSessionId = sessionId;
+        if (!targetSessionId) {
+          targetSessionId = await initializeSession(text || "Uploaded File");
+          setSessionId(targetSessionId);
         }
+  
+        // 1. Upload directly to Python
+        let uploadedUrls: string[] = [];
+        if (attachedFiles.length > 0) {
+          uploadedUrls = await uploadFilesDirectly(attachedFiles, targetSessionId);
+        }
+  
+        // 2. Format UI
+        let localDisplayContent = text || "Uploaded files.";
+        const imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
+        const fileMarkdown = uploadedUrls.map((url) => {
+          const ext = url.split('.').pop()?.toLowerCase() || '';
+          const fileName = url.split('/').pop() || "Document";
+          if (imageExtensions.includes(ext)) return `\n\n![${fileName}](${url})`;
+          return `\n\n[${fileName}](attachment)`;
+        }).join("");
+  
+        localDisplayContent += fileMarkdown;
+        setMessages(prev => [...prev, { role: 'user', content: localDisplayContent }]);
+  
+        // 3. Send message to backend action
+        // Notice we pass targetSessionId, text, 'gpt-4o', and uploadedUrls
+        const res = await sendCoachingMessage(targetSessionId, text, 'gpt-4o', uploadedUrls);
+        if (requestRef.current !== reqId) return; 
         
-        const finalMsgs = [...newMsgs, { role: 'assistant', content: safeContent }];
-        setLastAssistantIndex(finalMsgs.length - 1);
-        return finalMsgs;
-      });
-      setIsTyping(true);
-
-    } catch (err: any) {
-      console.error(err);
-      if (requestRef.current === reqId) {
-        setMessages(prev => [
-          ...prev, 
-          { role: 'assistant', content: `**System Error:** ${err.message || 'Connection or File Upload Failed. Please try again.'}` }
-        ]);
-        setIsTyping(false);
+        if (!sessionId) refreshSessions();
+        
+        setMessages(prev => {
+          const newMsgs = [...prev, { role: 'assistant', content: res.content }];
+          setLastAssistantIndex(newMsgs.length - 1);
+          return newMsgs;
+        });
+        setIsTyping(true);
+  
+      } catch (err: any) {
+        console.error(err);
+        if (requestRef.current === reqId) {
+          setMessages(prev => [
+            ...prev, 
+            { role: 'assistant', content: `**System Error:** ${err.message || 'Connection or File Upload Failed. Please try again.'}` }
+          ]);
+          setIsTyping(false);
+        }
+      } finally { 
+        if (requestRef.current === reqId) setLoading(false); 
       }
-    } finally { 
-      if (requestRef.current === reqId) setLoading(false); 
-    }
-  };
+    };
 
   const handleEditSubmit = async (index: number, newText: string) => {
-    if (!newText.trim() || loading || isTyping) return;
-    const reqId = ++requestRef.current;
-    
-    setForceStop(false);
-    const truncatedMessages = messages.slice(0, index);
-    setMessages([...truncatedMessages, { role: 'user', content: newText }]);
-    setLoading(true);
-    
-    try {
-      const res = await sendCoachingMessage(sessionId, newText, 'default', index, undefined);
-      if (requestRef.current !== reqId) return; 
-
-      if (res?.sessionId) setSessionId(res.sessionId);
-      const safeContent = getSafeResponseText(res);
-
-      setMessages(prev => {
-        const newMsgs = [...truncatedMessages, { role: 'user', content: newText }, { role: 'assistant', content: safeContent }];
-        setLastAssistantIndex(newMsgs.length - 1);
-        return newMsgs;
-      });
-      setIsTyping(true);
-    } catch (err) {
-      console.error(err);
-    } finally { 
-      if (requestRef.current === reqId) setLoading(false); 
-    }
-  };
+      if (!newText.trim() || loading || isTyping) return;
+      const reqId = ++requestRef.current;
+      
+      setForceStop(false);
+      const truncatedMessages = messages.slice(0, index);
+      setMessages([...truncatedMessages, { role: 'user', content: newText }]);
+      setLoading(true);
+      
+      try {
+        // Pass empty array for fileUrls when editing
+        const res = await sendCoachingMessage(sessionId!, newText, 'gpt-4o', [], index);
+        if (requestRef.current !== reqId) return; 
+  
+        setMessages(prev => {
+          const newMsgs = [...truncatedMessages, { role: 'user', content: newText }, { role: 'assistant', content: res.content }];
+          setLastAssistantIndex(newMsgs.length - 1);
+          return newMsgs;
+        });
+        setIsTyping(true);
+      } catch (err) {
+        console.error(err);
+      } finally { 
+        if (requestRef.current === reqId) setLoading(false); 
+      }
+    };
 
   const handleRegenerate = async (index: number) => {
     if (loading || isTyping) return;

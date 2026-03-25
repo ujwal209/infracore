@@ -1,5 +1,7 @@
 'use server'
 
+
+
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/utils/supabase/server";
 
@@ -8,6 +10,38 @@ const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+// 🚀 CRITICAL FIX: Clean the URL so we never get double slashes (//)
+const getAgentUrl = () => {
+  const url = process.env.NEXT_PUBLIC_AGENT_URL || process.env.AGENT_URL || "http://127.0.0.1:8789";
+  return url.replace(/\/$/, ""); 
+};
+
+// 🚀 NEW: Creates the session FIRST so the frontend can upload files directly to Python
+export async function initializeSession(title: string, initData?: { subject: string, level: string }) {
+  const supabaseAuth = await createServerClient();
+  const { data: { user } } = await supabaseAuth.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const sessionTitle = initData ? `Study: ${initData.subject}` : (title || "New Session").slice(0, 35) + '...';
+
+  const { data: session, error } = await supabaseAdmin
+    .from('study_sessions')
+    .insert({ 
+      user_id: user.id, 
+      title: sessionTitle,
+      subject: initData?.subject,
+      level: initData?.level
+    })
+    .select().single();
+
+  if (error || !session) {
+    console.error("Session Init Error:", error);
+    throw new Error("Failed to initialize session");
+  }
+
+  return session.id;
+}
 
 export async function getStudySessions() {
   const supabaseAuth = await createServerClient();
@@ -35,38 +69,18 @@ export async function deleteStudySession(id: string) {
   await supabaseAdmin.from('study_sessions').delete().eq('id', id);
 }
 
-// --- LOCAL RAG UPLOAD HELPER ---
-async function uploadToLocalRAG(file: File, sessionId: string) {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('session_id', sessionId);
-  
-  const AGENT_URL = process.env.NEXT_PUBLIC_AGENT_URL || "http://127.0.0.1:8789";
-  const response = await fetch(`${AGENT_URL}/api/v1/upload-doc`, {
-    method: "POST",
-    body: formData,
-  });
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Local RAG Error: ${response.status} - ${errorText}`);
-  }
-  const result = await response.json();
-  
-  return result.url;
-}
-
 export async function renameStudySession(id: string, title: string) {
   await supabaseAdmin.from('study_sessions').update({ title }).eq('id', id);
 }
 
+// 🚀 UPDATED: Now receives pre-uploaded file URLs from the frontend!
 export async function sendStudyMessage(
   sessionId: string | null, 
   content: string, 
-  initData?: { subject: string, level: string },
-  truncateIndex?: number,
+  fileUrls: string[] = [], // No more FormData passing through Vercel!
   options?: { webSearch?: boolean, deepThink?: boolean },
-  fileFormData?: FormData
+  truncateIndex?: number,
+  initData?: { subject: string, level: string }
 ) {
   const supabaseAuth = await createServerClient();
   const { data: { user } } = await supabaseAuth.auth.getUser();
@@ -75,22 +89,38 @@ export async function sendStudyMessage(
   let currentSessionId = sessionId;
   let chatHistory: { role: string; content: string }[] = [];
 
-  if (!currentSessionId && initData) {
+  // Fallback creation if session wasn't initialized first
+  if (!currentSessionId) {
+    const sessionTitle = initData ? `Study: ${initData.subject}` : (content || "New Session").slice(0, 35) + '...';
     const { data: session } = await supabaseAdmin
       .from('study_sessions')
       .insert({ 
         user_id: user.id, 
-        title: `Study: ${initData.subject}`,
-        subject: initData.subject,
-        level: initData.level
+        title: sessionTitle,
+        subject: initData?.subject,
+        level: initData?.level
       })
       .select().single();
     currentSessionId = session.id;
-  } else if (currentSessionId) {
+  } else {
+    // SECURITY CHECK
+    const { data: sessionData, error: sessionError } = await supabaseAdmin
+      .from('study_sessions')
+      .select('user_id')
+      .eq('id', currentSessionId)
+      .single();
+
+    if (sessionError || !sessionData || sessionData.user_id !== user.id) {
+      throw new Error("Unauthorized: Invalid session access.");
+    }
+
+    // FETCH CONTEXT
     const { data: pastMessages } = await supabaseAdmin
       .from('study_messages')
       .select('role, content')
       .eq('session_id', currentSessionId)
+      .order('created_at', { ascending: true });
+
     if (pastMessages) {
       if (typeof truncateIndex === 'number' && truncateIndex < pastMessages.length) {
         const { data: allMsgs } = await supabaseAdmin
@@ -108,46 +138,31 @@ export async function sendStudyMessage(
         chatHistory = pastMessages;
       }
     }
-  } else {
-    throw new Error("Missing session data.");
   }
 
-  // --- 🚀 FILE EXTRACTION & UPLOAD (RAG Integration) ---
-  let files: File[] = [];
-  if (fileFormData && typeof fileFormData.getAll === 'function') {
-    files = fileFormData.getAll('files') as File[];
-  }
-
-  let fileUrls: string[] = [];
-  if (files.length > 0) {
-    try {
-      const uploadPromises = files.map(file => uploadToLocalRAG(file, currentSessionId!));
-      fileUrls = await Promise.all(uploadPromises);
-      
-      const imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
-      const fileMarkdown = fileUrls
-        .map((url, i) => {
-          const ext = url.split('.').pop()?.toLowerCase();
-          const fileName = files[i]?.name || "Document";
-          if (ext && imageExtensions.includes(ext)) {
-            return `\n![Uploaded Image](${url})`;
-          } else {
-            return `\n\n[📁 Attached File: ${fileName}](${url})`;
-          }
-        })
-        .join("");
-      
-      content += fileMarkdown;
-    } catch (error: any) {
-      console.error("Study File upload error:", error);
-    }
+  // --- 🚀 FILE MARKDOWN INJECTION ---
+  if (fileUrls.length > 0) {
+    const imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
+    const fileMarkdown = fileUrls
+      .map((url) => {
+        const ext = url.split('.').pop()?.toLowerCase();
+        const fileName = url.split('/').pop() || "Document";
+        if (ext && imageExtensions.includes(ext)) {
+          return `\n\n![${fileName}](${url})`;
+        } else {
+          return `\n\n[📁 Attached File: ${fileName}](${url})`;
+        }
+      })
+      .join("");
+    
+    content += fileMarkdown;
   }
 
   await supabaseAdmin.from('study_messages').insert({ session_id: currentSessionId, role: 'user', content });
 
   let finalContent = "";
   try {
-  const AGENT_URL = process.env.NEXT_PUBLIC_AGENT_URL || "http://127.0.0.1:8789";
+    const AGENT_URL = getAgentUrl();
     const response = await fetch(`${AGENT_URL}/api/v1/study`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -155,7 +170,7 @@ export async function sendStudyMessage(
         message: content, 
         history: chatHistory,
         sessionId: currentSessionId,
-        images: fileUrls,
+        images: fileUrls, // Pass the URLs to Python
         webSearch: options?.webSearch,
         deepThink: options?.deepThink
       }),
@@ -171,7 +186,8 @@ export async function sendStudyMessage(
     if (error.message?.includes("413") || error.message?.includes("too large")) {
       finalContent = "### ⨯ Conversation Too Large\nThis session has exceeded the processing limit. **Please start a new chat** to continue smoothly!";
     } else {
-      finalContent = "### ⨯ Connection Disrupted\nCould not reach the INFERA Study engine. Please check your connection or try a new session.";
+      // 🚀 EXPOSE REAL ERROR
+      finalContent = `### ⨯ Connection Disrupted\nCould not reach the INFERA Study engine. \n**Details:** ${error.message}`;
     }
   }
 
