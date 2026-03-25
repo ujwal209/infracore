@@ -116,9 +116,10 @@ export async function sendRoadmapMessage(
   // 3. SEND TO PYTHON BACKEND
   try {
     let response;
+    const AGENT_URL = process.env.NEXT_PUBLIC_AGENT_URL || "http://127.0.0.1:8789";
     if (initData) {
       // First generation hits the specialized roadmap endpoint
-      response = await fetch("https://inferaagent.onrender.com/api/v1/roadmap", {
+      response = await fetch(`${AGENT_URL}/api/v1/roadmap`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
@@ -129,7 +130,7 @@ export async function sendRoadmapMessage(
       });
     } else {
       // Follow-up questions hit the general chat endpoint with history
-      response = await fetch("https://inferaagent.onrender.com/api/v1/chat", {
+      response = await fetch(`${AGENT_URL}/api/v1/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: content, history: chatHistory }),

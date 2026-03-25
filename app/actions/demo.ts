@@ -2,7 +2,8 @@
 
 export async function sendDemoMessage(message: string, history: any[]) {
   try {
-    const response = await fetch('https://inferaagent.onrender.com/api/v1/study', {
+    const AGENT_URL = process.env.NEXT_PUBLIC_AGENT_URL || "http://127.0.0.1:8789";
+    const response = await fetch(`${AGENT_URL}/api/v1/study`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message, history, deepThink: false, webSearch: false }),

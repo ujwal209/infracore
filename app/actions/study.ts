@@ -41,7 +41,8 @@ async function uploadToLocalRAG(file: File, sessionId: string) {
   formData.append('file', file);
   formData.append('session_id', sessionId);
   
-  const response = await fetch("https://inferaagent.onrender.com/api/v1/upload-doc", {
+  const AGENT_URL = process.env.NEXT_PUBLIC_AGENT_URL || "http://127.0.0.1:8789";
+  const response = await fetch(`${AGENT_URL}/api/v1/upload-doc`, {
     method: "POST",
     body: formData,
   });
@@ -123,6 +124,7 @@ export async function sendStudyMessage(
       const uploadPromises = files.map(file => uploadToLocalRAG(file, currentSessionId!));
       fileUrls = await Promise.all(uploadPromises);
       
+      const imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
       const fileMarkdown = fileUrls
         .map((url, i) => {
           const ext = url.split('.').pop()?.toLowerCase();
@@ -145,7 +147,8 @@ export async function sendStudyMessage(
 
   let finalContent = "";
   try {
-    const response = await fetch("https://inferaagent.onrender.com/api/v1/study", {
+  const AGENT_URL = process.env.NEXT_PUBLIC_AGENT_URL || "http://127.0.0.1:8789";
+    const response = await fetch(`${AGENT_URL}/api/v1/study`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ 

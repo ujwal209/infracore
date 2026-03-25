@@ -84,7 +84,8 @@ export async function analyzeResumeAction(sessionId: string | null, formData: Fo
   // 3. Send to FastAPI
   let finalContent = "";
   try {
-    const response = await fetch("https://inferaagent.onrender.com/api/v1/resume-analyze", {
+    const AGENT_URL = process.env.NEXT_PUBLIC_AGENT_URL || "http://127.0.0.1:8789";
+    const response = await fetch(`${AGENT_URL}/api/v1/resume-analyze`, {
       method: "POST",
       body: formData, 
     });

@@ -15,7 +15,8 @@ async function uploadToLocalRAG(file: File, sessionId: string) {
   formData.append('file', file);
   formData.append('session_id', sessionId);
   
-  const response = await fetch("https://inferaagent.onrender.com/api/v1/upload-doc", {
+  const AGENT_URL = process.env.NEXT_PUBLIC_AGENT_URL || "http://127.0.0.1:8789";
+  const response = await fetch(`${AGENT_URL}/api/v1/upload-doc`, {
     method: "POST",
     body: formData,
   });
@@ -164,7 +165,8 @@ export async function sendCoachingMessage(
 
   // 4. Send request to Agent
   try {
-    const response = await fetch("https://inferaagent.onrender.com/api/v1/chat", {
+    const AGENT_URL = process.env.NEXT_PUBLIC_AGENT_URL || "http://127.0.0.1:8789";
+    const response = await fetch(`${AGENT_URL}/api/v1/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ 
