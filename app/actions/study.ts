@@ -35,6 +35,26 @@ export async function deleteStudySession(id: string) {
   await supabaseAdmin.from('study_sessions').delete().eq('id', id);
 }
 
+// --- LOCAL RAG UPLOAD HELPER ---
+async function uploadToLocalRAG(file: File, sessionId: string) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('session_id', sessionId);
+  
+  const response = await fetch("https://inferaagent.onrender.com/api/v1/upload-doc", {
+    method: "POST",
+    body: formData,
+  });
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Local RAG Error: ${response.status} - ${errorText}`);
+  }
+  const result = await response.json();
+  
+  return result.url;
+}
+
 export async function renameStudySession(id: string, title: string) {
   await supabaseAdmin.from('study_sessions').update({ title }).eq('id', id);
 }
@@ -44,7 +64,8 @@ export async function sendStudyMessage(
   content: string, 
   initData?: { subject: string, level: string },
   truncateIndex?: number,
-  options?: { webSearch?: boolean, deepThink?: boolean }
+  options?: { webSearch?: boolean, deepThink?: boolean },
+  fileFormData?: FormData
 ) {
   const supabaseAuth = await createServerClient();
   const { data: { user } } = await supabaseAuth.auth.getUser();
@@ -90,6 +111,36 @@ export async function sendStudyMessage(
     throw new Error("Missing session data.");
   }
 
+  // --- 🚀 FILE EXTRACTION & UPLOAD (RAG Integration) ---
+  let files: File[] = [];
+  if (fileFormData && typeof fileFormData.getAll === 'function') {
+    files = fileFormData.getAll('files') as File[];
+  }
+
+  let fileUrls: string[] = [];
+  if (files.length > 0) {
+    try {
+      const uploadPromises = files.map(file => uploadToLocalRAG(file, currentSessionId!));
+      fileUrls = await Promise.all(uploadPromises);
+      
+      const fileMarkdown = fileUrls
+        .map((url, i) => {
+          const ext = url.split('.').pop()?.toLowerCase();
+          const fileName = files[i]?.name || "Document";
+          if (ext && imageExtensions.includes(ext)) {
+            return `\n![Uploaded Image](${url})`;
+          } else {
+            return `\n\n[📁 Attached File: ${fileName}](${url})`;
+          }
+        })
+        .join("");
+      
+      content += fileMarkdown;
+    } catch (error: any) {
+      console.error("Study File upload error:", error);
+    }
+  }
+
   await supabaseAdmin.from('study_messages').insert({ session_id: currentSessionId, role: 'user', content });
 
   let finalContent = "";
@@ -100,6 +151,8 @@ export async function sendStudyMessage(
       body: JSON.stringify({ 
         message: content, 
         history: chatHistory,
+        sessionId: currentSessionId,
+        images: fileUrls,
         webSearch: options?.webSearch,
         deepThink: options?.deepThink
       }),
@@ -110,8 +163,13 @@ export async function sendStudyMessage(
     let rawContent = data.response || data.answer || data.message;
     finalContent = typeof rawContent === 'string' ? rawContent : JSON.stringify(rawContent);
 
-  } catch (error) {
-    finalContent = "### ⨯ Connection Disrupted\nCould not reach the INFERA Study engine.";
+  } catch (error: any) {
+    console.error("Study Chat Error:", error);
+    if (error.message?.includes("413") || error.message?.includes("too large")) {
+      finalContent = "### ⨯ Conversation Too Large\nThis session has exceeded the processing limit. **Please start a new chat** to continue smoothly!";
+    } else {
+      finalContent = "### ⨯ Connection Disrupted\nCould not reach the INFERA Study engine. Please check your connection or try a new session.";
+    }
   }
 
   await supabaseAdmin.from('study_messages').insert({ session_id: currentSessionId, role: 'assistant', content: finalContent });

@@ -14,7 +14,7 @@ import {
   Trash2, Loader2, Check, PenLine, Square,
   GraduationCap, ArrowRight, Target, Sparkles,
   History, Trophy, Calendar, XCircle, CheckCircle2, BarChart, CheckSquare, Square as SquareIcon,
-  BookOpen, Copy, Maximize2, Download, ThumbsUp, ThumbsDown
+  BookOpen, Copy, Maximize2, Download, ThumbsUp, ThumbsDown, Paperclip, FileText, Image as ImageIcon
 } from 'lucide-react'
 
 import { createClient } from '@/utils/supabase/client'
@@ -37,19 +37,33 @@ const supabase = createClient()
 const temporaryQuizSessionCache: Record<string, { selected: Record<number, number>, submitted: boolean }> = {};
 
 // ==========================================
-// 1. LATEX PRE-PROCESSOR (FIXES THE MATH BUG)
+// 1. LATEX PRE-PROCESSOR
 // ==========================================
 export const formatLatex = (text: string) => {
   if (!text) return text;
   return text
-    // Replace escaped \[ \] with $$ $$
     .replace(/\\\[([\s\S]*?)\\\]/g, (_, match) => `$$${match}$$`)
-    // Replace escaped \( \) with $ $
     .replace(/\\\(([\s\S]*?)\\\)/g, (_, match) => `$${match}$`)
-    // Catch LLM lazy brackets [ \begin{...} ... \end{...} ]
     .replace(/(?:^|\n)\[\s*(\\begin\{[\s\S]*?\\end\{[^}]+\})\s*\](?:$|\n)/g, (_, match) => `\n$$${match}$$\n`)
-    // Catch LLM lazy brackets [ \mathbf... ] and other math commands
     .replace(/(?:^|\n)\[\s*(\\(?:mathbf|frac|sum|int|mu|sigma|alpha|beta|text|left)[\s\S]*?)\s*\](?:$|\n)/g, (_, match) => `\n$$${match}$$\n`);
+};
+
+// 🚀 CRITICAL FIX: Auto-Wrap pure math strings in Quiz Widgets that the LLM forgot to delimit
+export const formatQuizText = (text: string) => {
+  if (!text) return text;
+  let t = formatLatex(text);
+  
+  // If the text lacks delimiters but clearly contains math patterns (fractions, roots, exponents, sub/superscripts)
+  if (!t.includes('$') && !t.includes('\\[') && !t.includes('\\(')) {
+     // Check for strong math indicators
+     if (/[\^=<>_]|\\[a-zA-Z]+/.test(t) || (t.includes('/') && t.includes('(') && t.includes(')'))) {
+        // Ensure it's not just a standard conversational sentence containing a slash
+        if (!/\b(the|is|of|and|to|in|what|find|calculate|explain|how|why)\b/i.test(t)) {
+            return `$${t}$`; // Auto-wrap in math delimiters
+        }
+     }
+  }
+  return t;
 };
 
 // ==========================================
@@ -170,8 +184,13 @@ export const QuizWidget = ({ topic, questions, question, options, correctIndex, 
                 </span>
               )}
               <div className="text-[15px] sm:text-[16px] font-bold text-zinc-900 dark:text-white leading-relaxed pt-0.5 prose prose-zinc dark:prose-invert max-w-none prose-p:my-0 prose-headings:my-0 w-full overflow-x-auto break-words custom-scrollbar">
-                <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[[rehypeKatex, { strict: false }]]} components={QuizMarkdownComponents}>
-                  {formatLatex(q.question)}
+                <ReactMarkdown 
+                  remarkPlugins={[remarkMath, remarkGfm]} 
+                  rehypePlugins={[[rehypeKatex, { strict: false, throwOnError: false }]]} 
+                  urlTransform={(url: string) => url} 
+                  components={QuizMarkdownComponents}
+                >
+                  {formatQuizText(q.question)}
                 </ReactMarkdown>
               </div>
             </div>
@@ -211,8 +230,13 @@ export const QuizWidget = ({ topic, questions, question, options, correctIndex, 
                       {String.fromCharCode(65 + i)}
                     </div>
                     <div className="text-[13.5px] sm:text-[14.5px] leading-snug prose prose-zinc dark:prose-invert max-w-none prose-p:my-0 w-full overflow-x-auto break-words custom-scrollbar">
-                      <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[[rehypeKatex, { strict: false }]]} components={QuizMarkdownComponents}>
-                        {formatLatex(opt)}
+                      <ReactMarkdown 
+                        remarkPlugins={[remarkMath, remarkGfm]} 
+                        rehypePlugins={[[rehypeKatex, { strict: false, throwOnError: false }]]} 
+                        urlTransform={(url: string) => url} 
+                        components={QuizMarkdownComponents}
+                      >
+                        {formatQuizText(opt)}
                       </ReactMarkdown>
                     </div>
                     {submitted && i === q.correctIndex && <CheckCircle2 size={16} className="text-emerald-500 ml-auto shrink-0" />}
@@ -227,8 +251,13 @@ export const QuizWidget = ({ topic, questions, question, options, correctIndex, 
                 <Sparkles size={16} className="text-blue-500 shrink-0 mt-0.5" />
                 <div className="prose prose-zinc dark:prose-invert max-w-none w-full overflow-x-auto break-words custom-scrollbar">
                   <span className="font-bold text-zinc-900 dark:text-white mr-2">Explanation:</span>
-                  <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[[rehypeKatex, { strict: false }]]} components={QuizMarkdownComponents}>
-                    {formatLatex(q.explanation)}
+                  <ReactMarkdown 
+                    remarkPlugins={[remarkMath, remarkGfm]} 
+                    rehypePlugins={[[rehypeKatex, { strict: false, throwOnError: false }]]} 
+                    urlTransform={(url: string) => url} 
+                    components={QuizMarkdownComponents}
+                  >
+                    {formatQuizText(q.explanation)}
                   </ReactMarkdown>
                 </div>
               </div>
@@ -370,7 +399,7 @@ export const ProgressWidget = ({ topic, masteryPercentage: aiMastery, completedC
 }
 
 // ==========================================
-// 5. UTILITIES
+// 5. UTILITIES & INTERACTIVE COMPONENTS
 // ==========================================
 export const extractWidgets = (rawText: string) => {
   return { text: rawText || '', widgets: [], isStreaming: false };
@@ -451,9 +480,9 @@ const InteractiveImage = ({ src, alt }: { src?: string; alt?: string }) => {
     <>
       <div 
         onClick={() => setIsModalOpen(true)}
-        className="relative group my-6 rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 cursor-zoom-in shadow-sm transition-all hover:shadow-md max-w-lg"
+        className="relative group my-4 rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 cursor-zoom-in shadow-sm transition-all hover:shadow-md max-w-sm sm:max-w-md w-full"
       >
-        <img src={src} alt={alt || 'Generated output'} className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-[1.02]" loading="lazy" />
+        <img src={src} alt={alt || 'Uploaded or Generated output'} className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-[1.02]" loading="lazy" />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
           <div className="opacity-0 group-hover:opacity-100 bg-white/90 dark:bg-black/70 backdrop-blur-sm text-zinc-900 dark:text-zinc-100 px-4 py-2 rounded-xl flex items-center gap-2 font-google-sans font-bold text-[13px] shadow-xl transition-all duration-300 translate-y-2 group-hover:translate-y-0">
             <Maximize2 size={16} />
@@ -463,11 +492,11 @@ const InteractiveImage = ({ src, alt }: { src?: string; alt?: string }) => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8 bg-black/80 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setIsModalOpen(false)}>
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-8 bg-black/80 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setIsModalOpen(false)}>
           <div className="relative w-full max-w-5xl max-h-full flex flex-col items-center animate-in zoom-in-95 duration-300" onClick={(e) => e.stopPropagation()}>
             <div className="absolute -top-12 right-0 left-0 flex justify-between items-center px-2">
-              <span className="text-white/70 font-google-sans text-[13px] font-semibold truncate max-w-[200px] sm:max-w-md">
-                {alt || 'Generated Image'}
+              <span className="text-white/90 font-google-sans text-[14px] font-bold truncate max-w-[200px] sm:max-w-md">
+                {alt || 'Expanded Image'}
               </span>
               <button onClick={() => setIsModalOpen(false)} className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-colors">
                 <X size={20} />
@@ -477,7 +506,7 @@ const InteractiveImage = ({ src, alt }: { src?: string; alt?: string }) => {
             <div className="absolute -bottom-16 flex justify-center w-full">
               <button onClick={handleDownload} disabled={isDownloading} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-2xl font-google-sans font-bold text-[14px] shadow-lg shadow-blue-500/25 transition-all active:scale-95 disabled:opacity-70 disabled:active:scale-100">
                 {isDownloading ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
-                <span>{isDownloading ? 'Downloading...' : 'Download Image'}</span>
+                <span>{isDownloading ? 'Downloading...' : 'Download'}</span>
               </button>
             </div>
           </div>
@@ -511,12 +540,30 @@ const BaseMarkdownComponents = {
   p: ({ children, ...props }: any) => <p className="text-[14.5px] sm:text-[15px] leading-relaxed mb-3 sm:mb-4 break-words w-full" {...props}>{children}</p>,
   strong: ({ children }: any) => <strong className="font-bold text-zinc-900 dark:text-white break-words">{children}</strong>,
   
-  a: ({ node, href, children, ...props }: any) => (
-    <a href={href} target="_blank" rel="noopener noreferrer" className="inline text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline underline-offset-2 decoration-blue-500/30 font-semibold transition-colors break-words" {...props}>
-      {children}
-      <span className="inline-flex items-center justify-center bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 text-[9px] font-google-sans uppercase font-bold px-1.5 py-0.5 rounded ml-1 align-middle whitespace-nowrap">Source</span>
-    </a>
-  ),
+  // 🚀 CUSTOM INTERCEPTOR FOR ATTACHMENTS & LINKS
+  a: ({ node, href, children, ...props }: any) => {
+    // Check if it's our custom internal attachment marker
+    if (href === 'attachment') {
+      return (
+        <div className="flex items-center gap-3 px-4 py-3 bg-zinc-100 dark:bg-[#111113] border border-zinc-200 dark:border-zinc-800 rounded-xl w-max max-w-full my-3 shadow-sm select-none">
+          <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg shrink-0">
+            <FileText size={20} />
+          </div>
+          <span className="text-[13.5px] font-bold text-zinc-700 dark:text-zinc-300 truncate pr-2 font-google-sans">
+            {children}
+          </span>
+        </div>
+      );
+    }
+    
+    // Standard external link
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className="inline text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline underline-offset-2 decoration-blue-500/30 font-semibold transition-colors break-words" {...props}>
+        {children}
+        <span className="inline-flex items-center justify-center bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 text-[9px] font-google-sans uppercase font-bold px-1.5 py-0.5 rounded ml-1 align-middle whitespace-nowrap">Source</span>
+      </a>
+    );
+  },
 
   blockquote: ({ children }: any) => {
     return (
@@ -527,6 +574,7 @@ const BaseMarkdownComponents = {
     )
   },
   
+  // Renders markdown images as our Interactive Component
   img: ({ src, alt }: any) => <InteractiveImage src={src} alt={alt} />
 };
 
@@ -768,11 +816,24 @@ const MessageItem = React.memo(({ m, index, isLast, loading, isTypingGlobal, isL
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(m.content || "");
 
-  useEffect(() => { setEditValue(m.content || ""); }, [m.content]);
+  const [feedback, setFeedback] = useState<'liked' | 'disliked' | null>(null);
+
+  useEffect(() => {
+    if (!isUser) {
+      const stored = localStorage.getItem(`study-feedback-${sessionId}-${index}`);
+      if (stored === 'liked' || stored === 'disliked') setFeedback(stored);
+    }
+  }, [sessionId, index, isUser]);
+
+  const handleFeedback = (type: 'liked' | 'disliked') => {
+    const newVal = feedback === type ? null : type;
+    setFeedback(newVal);
+    if (newVal) localStorage.setItem(`study-feedback-${sessionId}-${index}`, newVal);
+    else localStorage.removeItem(`study-feedback-${sessionId}-${index}`);
+  };
 
   const contentToProcess = isNewAssistant && displayedContent !== undefined ? displayedContent : (m.content || "");
   
-  // FIX LATEX AND EXTRACT WIDGETS
   const { text: cleanTextRaw, widgets, isStreaming } = useMemo(() => extractWidgets(contentToProcess), [contentToProcess]);
   const cleanText = useMemo(() => formatLatex(cleanTextRaw), [cleanTextRaw]);
   
@@ -811,11 +872,26 @@ const MessageItem = React.memo(({ m, index, isLast, loading, isTypingGlobal, isL
       }`}>
         <div className={`prose prose-zinc dark:prose-invert max-w-full break-words w-full font-outfit custom-scrollbar ${isUser ? 'prose-p:leading-relaxed prose-p:my-0 prose-p:text-white dark:prose-p:text-zinc-900' : ''}`}>
           {isUser ? (
-            <p className="font-outfit text-[14.5px] sm:text-[15px] m-0 font-medium tracking-wide whitespace-pre-wrap">{m.content}</p>
+            <ReactMarkdown 
+              remarkPlugins={[remarkMath, remarkGfm]} 
+              rehypePlugins={[[rehypeKatex, { strict: false, throwOnError: false }]]}
+              urlTransform={(url: string) => url} // <-- FIX: Allows blob URLs
+              components={{
+                ...memoizedComponents,
+                p: ({ children }: any) => <p className="font-outfit text-[14.5px] sm:text-[15px] m-0 font-medium tracking-wide whitespace-pre-wrap text-white dark:text-zinc-900 leading-relaxed">{children}</p>,
+              }}
+            >
+              {m.content}
+            </ReactMarkdown>
           ) : (
             <>
               {cleanText && (
-                <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[[rehypeKatex, { strict: false, throwOnError: false }]]} components={memoizedComponents}>
+                <ReactMarkdown 
+                  remarkPlugins={[remarkMath, remarkGfm]} 
+                  rehypePlugins={[[rehypeKatex, { strict: false, throwOnError: false }]]} 
+                  urlTransform={(url: string) => url} // <-- FIX: Allows blob URLs
+                  components={memoizedComponents}
+                >
                   {cleanText}
                 </ReactMarkdown>
               )}
@@ -839,8 +915,20 @@ const MessageItem = React.memo(({ m, index, isLast, loading, isTypingGlobal, isL
       <div className={`flex items-center gap-1.5 mt-1.5 ${isUser ? 'mr-1.5 justify-end' : 'ml-1.5 justify-start'}`}>
         {!isUser && (
           <div className="flex items-center gap-1 shrink-0 mr-1">
-            <button className="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800" title="Like response"><ThumbsUp size={14} className="mt-[-1px]" /></button>
-            <button className="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800" title="Dislike response"><ThumbsDown size={14} className="mt-[1px]" /></button>
+            <button 
+              onClick={() => handleFeedback('liked')}
+              className={`p-1.5 transition-colors rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 ${feedback === 'liked' ? 'text-blue-600 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-400' : 'text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}
+              title="Like response"
+            >
+              <ThumbsUp size={14} className="mt-[-1px]" />
+            </button>
+            <button 
+              onClick={() => handleFeedback('disliked')}
+              className={`p-1.5 transition-colors rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 ${feedback === 'disliked' ? 'text-red-600 bg-red-50 dark:bg-red-500/10 dark:text-red-400' : 'text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}
+              title="Dislike response"
+            >
+              <ThumbsDown size={14} className="mt-[1px]" />
+            </button>
           </div>
         )}
         <CopyButton text={m.content || ""} />
@@ -865,7 +953,9 @@ MessageItem.displayName = 'MessageItem';
 // ==========================================
 const ActivePromptBar = ({ onSubmit, onStop, loading, isTyping, setShowHistoryModal, currentProgress = 0 }: any) => {
   const [chatInput, setChatInput] = useState('');
+  const [files, setFiles] = useState<File[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setChatInput(e.target.value);
@@ -875,43 +965,102 @@ const ActivePromptBar = ({ onSubmit, onStop, loading, isTyping, setShowHistoryMo
     }
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+    }
+  };
+
+  const removeFile = (idx: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== idx));
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      if (!loading && !isTyping && chatInput.trim()) {
-        onSubmit(chatInput);
+      if (!loading && !isTyping && (chatInput.trim() || files.length > 0)) {
+        onSubmit(chatInput, files);
         setChatInput('');
+        setFiles([]);
         if (textareaRef.current) textareaRef.current.style.height = 'auto';
       }
     }
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto pointer-events-auto">
-      <div className="bg-white/90 dark:bg-[#0c0c0e]/90 backdrop-blur-2xl border border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600 focus-within:border-blue-500 dark:focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/15 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] transition-all duration-300 overflow-hidden flex flex-col">
-        <div className="flex items-end gap-3 px-4 pt-3 pb-2">
+    <div className="w-full max-w-4xl mx-auto pointer-events-auto px-4">
+      <div className="bg-white/90 dark:bg-[#0c0c0e]/95 backdrop-blur-2xl border border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600 focus-within:border-blue-500 dark:focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 rounded-2xl sm:rounded-3xl shadow-[0_12px_40px_-5px_rgba(0,0,0,0.1)] dark:shadow-[0_12px_60px_-10px_rgba(0,0,0,0.5)] transition-all duration-300 flex flex-col">
+        
+        {/* FILE PREVIEW AREA */}
+        {files.length > 0 && (
+          <div className="flex flex-wrap gap-2 px-4 pt-4 pb-1">
+            {files.map((file, idx) => (
+              <div key={idx} className="relative flex items-center gap-2 p-1.5 pr-3 rounded-xl bg-zinc-100 dark:bg-[#111113] border border-zinc-200 dark:border-zinc-800 max-w-[180px] group">
+                {file.type.startsWith('image/') ? (
+                  <div className="w-8 h-8 shrink-0 rounded-lg overflow-hidden bg-zinc-200 dark:bg-zinc-800 ring-1 ring-zinc-200 dark:ring-zinc-700">
+                    <img src={URL.createObjectURL(file)} alt="preview" className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="w-8 h-8 shrink-0 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                    <BookOpen size={14} />
+                  </div>
+                )}
+                <span className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 truncate w-full pr-1 font-google-sans uppercase tracking-tight">
+                  {file.name}
+                </span>
+                <button 
+                  onClick={() => removeFile(idx)}
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-full flex items-center justify-center text-zinc-500 hover:text-red-500 shadow-md transition-all scale-0 group-hover:scale-100"
+                >
+                  <X size={10} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex items-end gap-2 px-4 pt-3 pb-2">
+          
+          <input 
+            type="file" 
+            multiple 
+            className="hidden" 
+            ref={fileInputRef} 
+            onChange={handleFileSelect} 
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={loading || isTyping}
+            className="h-10 w-10 sm:h-11 sm:w-11 mb-1 shrink-0 flex items-center justify-center rounded-xl text-zinc-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all disabled:opacity-50 active:scale-95"
+            title="Attach Study Material"
+          >
+            <Paperclip size={18} className={files.length > 0 ? "text-blue-500 animate-pulse" : ""} />
+          </button>
+
           <textarea
             ref={textareaRef}
             value={chatInput}
             onChange={handleInput}
             onKeyDown={handleKeyDown}
-            placeholder="Ask a follow-up or request your progress tracker..."
-            className="flex-1 bg-transparent font-outfit text-[14.5px] sm:text-[15px] font-medium text-zinc-900 dark:text-zinc-100 outline-none placeholder:text-zinc-500 dark:placeholder:text-zinc-400 min-h-[44px] max-h-[180px] resize-none custom-scrollbar leading-relaxed pt-1 pl-1"
+            placeholder={files.length > 0 ? "Context added. Ask me to explain or quiz you on these..." : "Ask a follow-up or request your progress tracker..."}
+            className="flex-1 bg-transparent font-outfit text-[14.5px] sm:text-[15px] font-medium text-zinc-900 dark:text-zinc-100 outline-none placeholder:text-zinc-500 dark:placeholder:text-zinc-400 min-h-[44px] max-h-[180px] resize-none custom-scrollbar leading-relaxed pt-1.5 pl-1"
             disabled={loading || isTyping}
             rows={1}
           />
+
           <button
             onClick={() => {
               if (loading || isTyping) onStop();
-              else if (chatInput.trim()) {
-                onSubmit(chatInput);
+              else if (chatInput.trim() || files.length > 0) {
+                onSubmit(chatInput, files);
                 setChatInput('');
+                setFiles([]);
                 if (textareaRef.current) textareaRef.current.style.height = 'auto';
               }
             }}
-            disabled={!loading && !isTyping && !chatInput.trim()}
+            disabled={!loading && !isTyping && !chatInput.trim() && files.length === 0}
             className={`h-9 w-9 sm:h-10 sm:w-10 mb-1 shrink-0 flex items-center justify-center rounded-xl transition-all duration-200 shadow-sm ${
-              loading || isTyping ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:scale-95 shadow-none' : !chatInput.trim() ? 'bg-zinc-100 dark:bg-[#111113] border border-transparent dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 cursor-not-allowed shadow-none' : 'bg-blue-600 text-white hover:bg-blue-500 active:scale-95 shadow-[0_4px_14px_rgba(37,99,235,0.3)]'
+              loading || isTyping ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:scale-95 shadow-none' : (!chatInput.trim() && files.length === 0) ? 'bg-zinc-100 dark:bg-[#111113] border border-transparent dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 cursor-not-allowed shadow-none' : 'bg-blue-600 text-white hover:bg-blue-500 active:scale-95 shadow-[0_4px_14px_rgba(37,99,235,0.3)]'
             }`}
           >
             {loading || isTyping ? <Square size={14} className="fill-current" /> : <Send size={16} className="-translate-x-px translate-y-px" />}
@@ -961,16 +1110,33 @@ const SUGGESTIONS = [
   { subject: 'Data Structures', level: 'Year 2', q: 'Time complexity of a Hash Map?' },
 ]
 
-const InitForm = ({ onSubmit, loading }: { onSubmit: (e: any) => void, loading: boolean }) => {
+const InitForm = ({ onSubmit, loading }: { onSubmit: (e: any, files: File[]) => void, loading: boolean }) => {
   const [subject, setSubject] = useState('')
   const [level, setLevel] = useState('')
   const [question, setQuestion] = useState('')
+  const [files, setFiles] = useState<File[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleSuggestion = (s: typeof SUGGESTIONS[0]) => {
     setSubject(s.subject)
     setLevel(s.level)
     setQuestion(s.q)
   }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+    }
+  };
+
+  const removeFile = (idx: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    onSubmit(e, files);
+  };
 
   return (
     <div className="w-full max-w-3xl mx-auto flex flex-col justify-center animate-in fade-in slide-in-from-bottom-2 duration-700 px-3 sm:px-5">
@@ -981,7 +1147,7 @@ const InitForm = ({ onSubmit, loading }: { onSubmit: (e: any) => void, loading: 
       </div>
 
       <div className="w-full text-left bg-white dark:bg-[#0c0c0e] border border-zinc-200 dark:border-zinc-800 focus-within:border-blue-500 dark:focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 rounded-2xl shadow-xl dark:shadow-none p-5 sm:p-7 md:p-8 transition-all duration-300">
-        <form onSubmit={onSubmit} className="flex flex-col gap-4 md:gap-6">
+        <form onSubmit={handleFormSubmit} className="flex flex-col gap-4 md:gap-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5">
             <div className="space-y-1.5">
               <label className="font-google-sans text-[10px] md:text-[11px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-[0.15em] pl-1">Subject</label>
@@ -992,9 +1158,32 @@ const InitForm = ({ onSubmit, loading }: { onSubmit: (e: any) => void, loading: 
               <input name="level" value={level} onChange={(e) => setLevel(e.target.value)} required placeholder="e.g. Graduate" className="font-outfit w-full bg-zinc-50 dark:bg-[#111113] border border-zinc-200 dark:border-zinc-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 px-3.5 py-3 rounded-xl text-[13.5px] font-medium outline-none transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400" disabled={loading} />
             </div>
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 relative">
             <label className="font-google-sans text-[10px] md:text-[11px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-[0.15em] pl-1">Your Primary Inquiry</label>
-            <textarea name="question" value={question} onChange={(e) => setQuestion(e.target.value)} required placeholder="Describe the concept or problem you'd like to master..." className="font-outfit w-full bg-zinc-50 dark:bg-[#111113] border border-zinc-200 dark:border-zinc-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 px-4 py-3.5 rounded-[1.25rem] text-[14px] md:text-[14.5px] font-medium outline-none transition-all text-zinc-900 dark:text-zinc-100 min-h-[90px] md:min-h-[100px] max-h-[160px] resize-none leading-relaxed custom-scrollbar" disabled={loading} />
+            <div className="relative">
+              <textarea name="question" value={question} onChange={(e) => setQuestion(e.target.value)} required placeholder="Describe the concept or problem you'd like to master..." className="font-outfit w-full bg-zinc-50 dark:bg-[#111113] border border-zinc-200 dark:border-zinc-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 px-4 py-3.5 pr-12 rounded-[1.25rem] text-[14px] md:text-[14.5px] font-medium outline-none transition-all text-zinc-900 dark:text-zinc-100 min-h-[90px] md:min-h-[100px] max-h-[160px] resize-none leading-relaxed custom-scrollbar" disabled={loading} />
+              <button 
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={loading}
+                className="absolute right-3 bottom-3 p-2 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all disabled:opacity-50"
+                title="Attach Materials"
+              >
+                <Paperclip size={18} className={files.length > 0 ? "text-blue-500 animate-pulse" : ""} />
+              </button>
+              <input type="file" multiple className="hidden" ref={fileInputRef} onChange={handleFileChange} />
+            </div>
+
+            {files.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3 animate-in fade-in slide-in-from-top-1">
+                {files.map((file, idx) => (
+                  <div key={idx} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30">
+                    <span className="text-[11px] font-bold text-blue-700 dark:text-blue-300 truncate max-w-[120px]">{file.name}</span>
+                    <button type="button" onClick={() => removeFile(idx)} className="text-blue-400 hover:text-red-500"><X size={12} /></button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-5 pt-4 md:pt-5 border-t border-zinc-100 dark:border-zinc-800/60 mt-1 md:mt-2">
             <div className="flex flex-wrap gap-2 justify-start w-full xl:w-auto">
@@ -1174,7 +1363,7 @@ export default function StudyChatPage() {
     setIsTyping(false);
   };
 
-  const handleInitSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleInitSubmit = async (e: React.FormEvent<HTMLFormElement>, files: File[] = []) => {
     e.preventDefault();
     if (loading) return;
     setLoading(true);
@@ -1184,15 +1373,36 @@ export default function StudyChatPage() {
     const level = formData.get('level') as string;
     const question = formData.get('question') as string;
 
-    const userMessage = `Topic: ${subject} (${level})\nQuestion: ${question}\n\nPlease start teaching me step-by-step using the Socratic method.`;
-    setMessages([{ role: 'user', content: userMessage }]);
+    let userMessage = `Topic: ${subject} (${level})\nQuestion: ${question}\n\nPlease start teaching me step-by-step using the Socratic method.`;
+    
+    // Append file indicators for local UI display with our special markup
+    const imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
+    const fileMarkdown = files
+      .map(f => {
+        const ext = f.name.split('.').pop()?.toLowerCase() || '';
+        if (imageExtensions.includes(ext)) {
+          return `\n\n![${f.name}](${URL.createObjectURL(f)})`;
+        } else {
+          return `\n\n[${f.name}](attachment)`;
+        }
+      })
+      .join("");
+    
+    const localDisplayMessage = userMessage + fileMarkdown;
+    setMessages([{ role: 'user', content: localDisplayMessage }]);
 
     try {
-      const res = await sendStudyMessage(null, userMessage, { subject, level });
+      let fileFormData = undefined;
+      if (files.length > 0) {
+        fileFormData = new FormData();
+        files.forEach(f => fileFormData!.append('files', f));
+      }
+
+      const res = await sendStudyMessage(null, userMessage, { subject, level }, undefined, undefined, fileFormData);
       setSessionId(res.sessionId);
       getStudySessions().then(setSessions);
 
-      setMessages([{ role: 'user', content: userMessage }, { role: 'assistant', content: res.content }]);
+      setMessages([{ role: 'user', content: localDisplayMessage }, { role: 'assistant', content: res.content }]);
       setLastAssistantIndex(1);
       setIsTyping(true);
     } catch (err: any) {
@@ -1205,7 +1415,7 @@ export default function StudyChatPage() {
     } finally { setLoading(false); }
   };
 
-  const handleChatSubmit = async (text: string, force = false) => {
+  const handleChatSubmit = async (text: string, files: File[] = [], force = false) => {
     if (!force && (loading || isTyping)) return;
     if (force) {
       setForceStop(true);
@@ -1213,11 +1423,34 @@ export default function StudyChatPage() {
     }
 
     const reqId = ++requestRef.current;
-    setMessages(prev => [...prev, { role: 'user', content: text }]);
+    
+    // UI-side formatting for our special markdown interceptors
+    let localDisplayContent = text;
+    const imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
+    const fileMarkdown = files
+      .map(f => {
+        const ext = f.name.split('.').pop()?.toLowerCase() || '';
+        if (imageExtensions.includes(ext)) {
+          return `\n\n![${f.name}](${URL.createObjectURL(f)})`;
+        } else {
+          return `\n\n[${f.name}](attachment)`;
+        }
+      })
+      .join("");
+    
+    localDisplayContent += fileMarkdown;
+
+    setMessages(prev => [...prev, { role: 'user', content: localDisplayContent }]);
     setLoading(true);
 
     try {
-      const res = await sendStudyMessage(sessionId, text);
+      let fileFormData = undefined;
+      if (files.length > 0) {
+        fileFormData = new FormData();
+        files.forEach(f => fileFormData!.append('files', f));
+      }
+
+      const res = await sendStudyMessage(sessionId, text, undefined, undefined, undefined, fileFormData);
       if (requestRef.current !== reqId) return;
 
       setMessages(prev => {
@@ -1452,7 +1685,7 @@ export default function StudyChatPage() {
 
               <div className="absolute inset-x-0 bottom-0 pointer-events-none pb-4 sm:pb-6 z-20 px-3 sm:px-6">
             <ActivePromptBar 
-              onSubmit={(text: string) => handleChatSubmit(text)} 
+              onSubmit={(text: string, files: File[]) => handleChatSubmit(text, files)} 
               onStop={handleStop} 
               loading={loading} 
               isTyping={isTyping}

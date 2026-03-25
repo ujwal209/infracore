@@ -2,11 +2,31 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/utils/supabase/server";
+import Mixedbread from '@mixedbread/sdk';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+// --- LOCAL RAG UPLOAD HELPER ---
+async function uploadToLocalRAG(file: File, sessionId: string) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('session_id', sessionId);
+  
+  const response = await fetch("https://inferaagent.onrender.com/api/v1/upload-doc", {
+    method: "POST",
+    body: formData,
+  });
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Local RAG Error: ${response.status} - ${errorText}`);
+  }
+  const result = await response.json();
+  return result.url;
+}
 
 // --- SESSION MANAGEMENT ---
 
@@ -46,7 +66,8 @@ export async function sendCoachingMessage(
   sessionId: string | null, 
   content: string, 
   model: string = 'gpt-4o',
-  truncateIndex?: number
+  truncateIndex?: number,
+  fileFormData?: FormData // Accept FormData to safely cross the Client-Server boundary
 ) {
   const supabaseAuth = await createServerClient();
   const { data: { user } } = await supabaseAuth.auth.getUser();
@@ -55,11 +76,11 @@ export async function sendCoachingMessage(
   let currentSessionId = sessionId;
   let chatHistory: { role: string; content: string }[] = [];
 
-  // 1. Resolve Session & Fetch History
+  // --- 1. Resolve Session ID first (needed for file upload) ---
   if (!currentSessionId) {
     const { data: session } = await supabaseAdmin
       .from('chat_sessions')
-      .insert({ user_id: user.id, title: content.slice(0, 35) + '...' })
+      .insert({ user_id: user.id, title: (content || "Uploaded File").slice(0, 35) + '...' })
       .select().single();
     
     currentSessionId = session.id;
@@ -84,7 +105,6 @@ export async function sendCoachingMessage(
 
     if (pastMessages) {
       if (typeof truncateIndex === 'number' && truncateIndex < pastMessages.length) {
-        // Find IDs of messages to delete
         const { data: allMsgs } = await supabaseAdmin
           .from('chat_messages')
           .select('id')
@@ -102,24 +122,56 @@ export async function sendCoachingMessage(
     }
   }
 
-  // 2. Save the NEW user message to the DB
+  // --- 2. FILE EXTRACTION & UPLOAD (Now that we have currentSessionId) ---
+  let files: File[] = [];
+  if (fileFormData && typeof fileFormData.getAll === 'function') {
+    files = fileFormData.getAll('files') as File[];
+  }
+
+  let fileUrls: string[] = [];
+  if (files.length > 0) {
+    try {
+      // Parallel upload to Cloudinary/Local backend
+      const uploadPromises = files.map(file => uploadToLocalRAG(file, currentSessionId!));
+      fileUrls = await Promise.all(uploadPromises);
+      console.log(`✅ [RAG] Successfully uploaded ${files.length} files. URLs:`, fileUrls);
+      
+      // Append images to content for UI rendering if any
+      const imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
+      const imageMarkdown = fileUrls
+        .filter(url => {
+          const ext = url.split('.').pop()?.toLowerCase();
+          return ext && imageExtensions.includes(ext);
+        })
+        .map(url => `\n![Uploaded Image](${url})`)
+        .join("");
+      
+      content += imageMarkdown;
+    } catch (error: any) {
+      console.error("File upload error:", error);
+      throw new Error(`Failed to process files: ${error.message}`);
+    }
+  }
+
+  // 3. Save the NEW user message to the DB (Now includes image markdown)
   await supabaseAdmin.from('chat_messages').insert({ 
     session_id: currentSessionId, 
     role: 'user', 
-    content 
+    content: content 
   });
 
   let finalContent = "";
 
-  // 3. Send request to Agent
+  // 4. Send request to Agent
   try {
-    const response = await fetch("https://inferaagent.onrender.com/api/v1/study", {
+    const response = await fetch("https://inferaagent.onrender.com/api/v1/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ 
         message: content, 
         history: chatHistory,
-        model: model 
+        sessionId: currentSessionId,
+        images: fileUrls // Pass URLs directly for Groq Vision
       }),
     });
 
@@ -131,7 +183,6 @@ export async function sendCoachingMessage(
     const data = await response.json();
     let rawContent = data.response || data.answer || data.message;
 
-    // --- CRITICAL FIX: PARSE AI ARRAYS/OBJECTS INTO A CLEAN STRING ---
     if (Array.isArray(rawContent)) {
       finalContent = rawContent.map((block: any) => {
         if (typeof block === 'string') return block;
@@ -151,17 +202,17 @@ export async function sendCoachingMessage(
     finalContent = "### ⨯ ERROR\nNeural link disrupted. Could not reach local development server.";
   }
 
-  // 4. Save Assistant response to DB
+  // 5. Save Assistant response to DB
   await supabaseAdmin.from('chat_messages').insert({ 
     session_id: currentSessionId, 
     role: 'assistant', 
     content: finalContent 
   });
 
-  // 5. Update session timestamp
+  // 6. Update session timestamp
   await supabaseAdmin.from('chat_sessions').update({ 
     updated_at: new Date().toISOString() 
   }).eq('id', currentSessionId);
 
-  return { sessionId: currentSessionId, content: finalContent };
+  return { sessionId: currentSessionId, content: finalContent, userContent: content };
 }

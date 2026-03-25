@@ -11,9 +11,9 @@ import {
   getChatMessages, sendCoachingMessage 
 } from '@/app/actions/coaching'
 import { 
-  Search, Menu, X, RefreshCw, Sparkles,
-  Plus, Send, Edit3, Trash2, Loader2, Check, ChevronRight, Copy, PenLine, CheckCircle2,
-  Globe, Zap, Square
+  Search, Menu, X, RefreshCw, Sparkles, Plus, Send, Edit3, 
+  Trash2, Loader2, Check, ChevronRight, Copy, PenLine, CheckCircle2,
+  Globe, Zap, Square, Paperclip, FileText, ThumbsUp, ThumbsDown
 } from 'lucide-react'
 
 // --- 1. UTILITY COMPONENTS ---
@@ -124,7 +124,7 @@ const useTypewriter = (text: string, enabled: boolean, forceStop: boolean, onCom
   return { displayedText, isTyping: isTypingState };
 };
 
-// --- FLOATING PROMPT BAR COMPONENT ---
+// --- FLOATING PROMPT BAR COMPONENT (WITH FILE UPLOADS) ---
 const PromptBar = ({ 
   onSubmit, 
   onStop,
@@ -132,7 +132,7 @@ const PromptBar = ({
   editTrigger,
   isCentered
 }: { 
-  onSubmit: (val: string) => void, 
+  onSubmit: (val: string, files: File[], deep: boolean, web: boolean) => void, 
   onStop: () => void,
   isGenerating: boolean,
   editTrigger: {text: string, ts: number} | null,
@@ -141,7 +141,10 @@ const PromptBar = ({
   const [text, setText] = useState('');
   const [deepSearch, setDeepSearch] = useState(false);
   const [webAccess, setWebAccess] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+  
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (editTrigger && editTrigger.text) {
@@ -169,12 +172,24 @@ const PromptBar = ({
     }
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setFiles(prev => [...prev, ...Array.from(e.target.files as FileList)]);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
+  const removeFile = (indexToRemove: number) => {
+    setFiles(prev => prev.filter((_, idx) => idx !== indexToRemove));
+  };
+
   const handleAction = () => {
     if (isGenerating) {
       onStop();
-    } else if (text.trim()) {
-      onSubmit(text);
+    } else if (text.trim() || files.length > 0) {
+      onSubmit(text, files, deepSearch, webAccess);
       setText('');
+      setFiles([]);
       if (textareaRef.current) textareaRef.current.style.height = 'auto';
     }
   };
@@ -185,27 +200,72 @@ const PromptBar = ({
     }`}>
       <div className={`w-full pointer-events-auto ${isCentered ? 'max-w-2xl mx-auto' : 'max-w-4xl mx-auto'}`}>
         
-        {/* PROMPT BAR STYLING: High visibility borders, crisp contrast */}
-        <div className="bg-white dark:bg-[#0c0c0e] border border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600 focus-within:border-blue-500 dark:focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 rounded-2xl sm:rounded-3xl transition-all duration-300 shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)]">
+        <div className="bg-white dark:bg-[#0c0c0e] border border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600 focus-within:border-blue-500 dark:focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 rounded-2xl sm:rounded-3xl transition-all duration-300 shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)] flex flex-col">
           
-          <div className="flex items-end gap-2 px-4 pt-4 pb-2">
+          {/* FILE PREVIEW AREA */}
+          {files.length > 0 && (
+            <div className="flex flex-wrap gap-3 px-4 pt-4 pb-1">
+              {files.map((file, idx) => (
+                <div key={idx} className="relative flex items-center gap-2 p-2 pr-3 rounded-xl bg-zinc-100 dark:bg-[#111113] border border-zinc-200 dark:border-zinc-800 max-w-[200px]">
+                  {file.type.startsWith('image/') ? (
+                    <div className="w-8 h-8 shrink-0 rounded-md overflow-hidden bg-zinc-200 dark:bg-zinc-800">
+                      <img src={URL.createObjectURL(file)} alt="preview" className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 shrink-0 rounded-md bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                      <FileText size={16} />
+                    </div>
+                  )}
+                  <span className="text-[12px] font-medium text-zinc-700 dark:text-zinc-300 truncate w-full">
+                    {file.name}
+                  </span>
+                  <button 
+                    onClick={() => removeFile(idx)}
+                    className="absolute -top-2 -right-2 w-5 h-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-full flex items-center justify-center text-zinc-500 hover:text-red-500 shadow-sm transition-colors"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-end gap-2 px-4 pt-3 pb-2">
+            
+            <input 
+              type="file" 
+              multiple 
+              className="hidden" 
+              ref={fileInputRef} 
+              onChange={handleFileSelect} 
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isGenerating}
+              className="h-10 w-10 sm:h-12 sm:w-12 mb-1.5 shrink-0 flex items-center justify-center rounded-xl sm:rounded-2xl text-zinc-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors disabled:opacity-50"
+              title="Attach File or Image"
+            >
+              <Paperclip size={20} />
+            </button>
+
             <textarea
               ref={textareaRef}
               value={text}
               onChange={handleInput}
               onKeyDown={handleKeyDown}
-              placeholder="Message INFERA CORE..."
-              className="flex-1 bg-transparent font-outfit text-[15px] sm:text-[16px] font-medium text-zinc-900 dark:text-zinc-100 outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-500 min-h-[52px] sm:min-h-[60px] max-h-[180px] resize-none custom-scrollbar leading-relaxed pt-1"
-              disabled={isGenerating && !text.trim()}
+              placeholder="Message INFERA CORE or drop a file..."
+              className="flex-1 bg-transparent font-outfit text-[15px] sm:text-[16px] font-medium text-zinc-900 dark:text-zinc-100 outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-500 min-h-[52px] sm:min-h-[60px] max-h-[180px] resize-none custom-scrollbar leading-relaxed pt-2.5 sm:pt-3.5"
+              disabled={isGenerating && !text.trim() && files.length === 0}
               rows={1}
             />
+            
             <button
               onClick={handleAction}
-              disabled={!isGenerating && !text.trim()}
+              disabled={!isGenerating && !text.trim() && files.length === 0}
               className={`h-10 w-10 sm:h-12 sm:w-12 mb-1.5 shrink-0 flex items-center justify-center rounded-xl sm:rounded-2xl transition-all duration-200 shadow-sm ${
                 isGenerating
                   ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:scale-95'
-                  : !text.trim()
+                  : (!text.trim() && files.length === 0)
                     ? 'bg-zinc-100 dark:bg-[#111113] text-zinc-400 dark:text-zinc-600 border border-transparent dark:border-zinc-800 cursor-not-allowed'
                     : 'bg-blue-600 text-white hover:bg-blue-500 active:scale-95 shadow-[0_4px_14px_rgba(37,99,235,0.3)]'
               }`}
@@ -224,7 +284,7 @@ const PromptBar = ({
               }`}
             >
               <Zap size={13} className={deepSearch ? 'text-violet-600 dark:text-violet-400' : ''} />
-              Deep Search
+              Deep Think
             </button>
 
             <button
@@ -333,16 +393,31 @@ export default function AICoachingMentor() {
     return res.content || res.text || res.message || res.response || JSON.stringify(res);
   };
 
-  const submitPrompt = async (text: string) => {
-    if (!text.trim() || loading || isTyping) return;
+  const submitPrompt = async (text: string, attachedFiles: File[] = [], deepSearch: boolean = false, webAccess: boolean = false) => {
+    if ((!text.trim() && attachedFiles.length === 0) || loading || isTyping) return;
     const reqId = ++requestRef.current;
     
     setForceStop(false);
-    setMessages(prev => [...prev, { role: 'user', content: text }]);
+
+    let optimisticText = text || "Uploaded files.";
+    if (attachedFiles.length > 0) {
+      const fileNames = attachedFiles.map(f => `📄 ${f.name}`).join('\n');
+      optimisticText = text ? `${text}\n\n${fileNames}` : fileNames;
+    }
+
+    setMessages(prev => [...prev, { role: 'user', content: optimisticText }]);
     setLoading(true);
     
     try {
-      const res = await sendCoachingMessage(sessionId, text, 'default');
+      // Create FormData to securely send files across the Next.js boundary
+      let formData: FormData | undefined = undefined;
+      if (attachedFiles.length > 0) {
+        formData = new FormData();
+        attachedFiles.forEach(file => formData.append('files', file));
+      }
+
+      // Pass the formData directly into the Server Action
+      const res = await sendCoachingMessage(sessionId, text, 'default', undefined, formData);
       if (requestRef.current !== reqId) return; 
       
       if (res?.sessionId) {
@@ -353,17 +428,24 @@ export default function AICoachingMentor() {
       const safeContent = getSafeResponseText(res);
       
       setMessages(prev => {
-        const newMsgs = [...prev, { role: 'assistant', content: safeContent }];
-        setLastAssistantIndex(newMsgs.length - 1);
-        return newMsgs;
+        const newMsgs = [...prev];
+        // 🚀 Swap optimistic text for real content with image markdown
+        if (res?.userContent && newMsgs.length >= 1) {
+          newMsgs[newMsgs.length - 1] = { role: 'user', content: res.userContent };
+        }
+        
+        const finalMsgs = [...newMsgs, { role: 'assistant', content: safeContent }];
+        setLastAssistantIndex(finalMsgs.length - 1);
+        return finalMsgs;
       });
       setIsTyping(true);
+
     } catch (err: any) {
       console.error(err);
       if (requestRef.current === reqId) {
         setMessages(prev => [
           ...prev, 
-          { role: 'assistant', content: `**System Error:** Connection Failed. Please try again.` }
+          { role: 'assistant', content: `**System Error:** ${err.message || 'Connection or File Upload Failed. Please try again.'}` }
         ]);
         setIsTyping(false);
       }
@@ -382,7 +464,7 @@ export default function AICoachingMentor() {
     setLoading(true);
     
     try {
-      const res = await sendCoachingMessage(sessionId, newText, 'default', index);
+      const res = await sendCoachingMessage(sessionId, newText, 'default', index, undefined);
       if (requestRef.current !== reqId) return; 
 
       if (res?.sessionId) setSessionId(res.sessionId);
@@ -417,24 +499,24 @@ export default function AICoachingMentor() {
     }
   };
 
-  // --- 3. ROBUST MARKDOWN COMPONENTS ---
+  // --- 3. ROBUST, BEAUTIFUL MARKDOWN COMPONENTS ---
   const MarkdownComponents = {
     table: ({ children }: any) => (
-      <div className="my-6 overflow-x-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#0c0c0e] shadow-sm">
+      <div className="my-8 overflow-x-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#0c0c0e] shadow-sm">
         <table className="w-full text-left border-collapse text-sm font-outfit">{children}</table>
       </div>
     ),
     thead: ({ children }: any) => <thead className="bg-zinc-50 dark:bg-[#111113] text-zinc-500 dark:text-zinc-400 font-google-sans font-bold uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-800">{children}</thead>,
-    th: ({ children }: any) => <th className="px-4 py-3 border-r border-zinc-200 dark:border-zinc-800 last:border-0">{children}</th>,
-    td: ({ children }: any) => <td className="px-4 py-3 border-r border-zinc-100 dark:border-zinc-800/50 last:border-0 border-b border-zinc-100 dark:border-zinc-800/50 text-zinc-800 dark:text-zinc-300 font-medium">{children}</td>,
+    th: ({ children }: any) => <th className="px-5 py-4 border-r border-zinc-200 dark:border-zinc-800 last:border-0">{children}</th>,
+    td: ({ children }: any) => <td className="px-5 py-4 border-r border-zinc-100 dark:border-zinc-800/50 last:border-0 border-b border-zinc-100 dark:border-zinc-800/50 text-zinc-800 dark:text-zinc-300 font-medium leading-relaxed">{children}</td>,
     
-    // SaaS Grade Code Blocks (Always Dark for premium feel, matching Vercel/Linear)
-    pre: ({ children }: any) => <div className="rounded-2xl overflow-hidden my-6 border border-zinc-800 shadow-lg relative group/code bg-[#0c0c0e]">{children}</div>,
+    // SaaS Grade Code Blocks
+    pre: ({ children }: any) => <div className="rounded-2xl overflow-hidden my-8 border border-zinc-800 shadow-xl relative group/code bg-[#0c0c0e]">{children}</div>,
     code: ({ node, className, inline, children, ...props }: any) => {
       const match = /language-(\w+)/.exec(className || '');
       return !inline && match ? (
         <div className="relative">
-          <div className="bg-[#111113] px-4 py-2.5 text-xs font-mono text-zinc-400 border-b border-zinc-800 flex justify-between items-center">
+          <div className="bg-[#111113] px-5 py-3 text-xs font-mono text-zinc-400 border-b border-zinc-800 flex justify-between items-center">
             <span className="font-google-sans font-bold tracking-wider uppercase text-zinc-500">{match[1]}</span>
             <CodeCopyButton text={String(children).replace(/\n$/, '')} />
           </div>
@@ -442,7 +524,7 @@ export default function AICoachingMentor() {
             style={oneDark}
             language={match[1]}
             PreTag="div"
-            className="!m-0 !bg-[#0c0c0e] !p-5 custom-scrollbar"
+            className="!m-0 !bg-[#0c0c0e] !p-6 custom-scrollbar"
             codeTagProps={{
               className: "text-[14px] font-mono leading-relaxed text-zinc-200"
             }}
@@ -451,25 +533,48 @@ export default function AICoachingMentor() {
           </SyntaxHighlighter>
         </div>
       ) : (
-        <code className={`${inline ? 'bg-zinc-100 dark:bg-[#1f1f22] text-zinc-900 dark:text-zinc-200 px-1.5 py-0.5 rounded-md border border-zinc-200 dark:border-zinc-800/50' : 'block p-4 bg-[#0c0c0e] text-zinc-200'} font-mono text-[0.85em] font-semibold`} {...props}>
+        <code className={`${inline ? 'bg-zinc-100 dark:bg-[#1f1f22] text-zinc-900 dark:text-zinc-200 px-1.5 py-0.5 rounded-md border border-zinc-200 dark:border-zinc-800/50' : 'block p-5 bg-[#0c0c0e] text-zinc-200'} font-mono text-[0.85em] font-semibold`} {...props}>
           {children}
         </code>
       );
     },
     
-    p: ({ children }: any) => <p className="mb-4 last:mb-0 leading-relaxed font-outfit text-[15.5px] sm:text-[16px] text-zinc-800 dark:text-zinc-300">{children}</p>,
-    h3: ({ children }: any) => <h3 className="font-google-sans text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 mt-8 mb-4">{children}</h3>,
-    h2: ({ children }: any) => <h2 className="font-google-sans text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 mt-10 mb-6">{children}</h2>,
-    ul: ({ children }: any) => <ul className="list-disc pl-5 space-y-2 mb-4 font-outfit text-[15.5px] sm:text-[16px] text-zinc-800 dark:text-zinc-300">{children}</ul>,
-    ol: ({ children }: any) => <ol className="list-decimal pl-5 space-y-2 mb-4 font-outfit text-[15.5px] sm:text-[16px] text-zinc-800 dark:text-zinc-300">{children}</ol>,
-    strong: ({ children }: any) => <strong className="font-bold text-zinc-900 dark:text-white">{children}</strong>,
+    p: ({ children }: any) => <p className="mb-6 last:mb-0 leading-loose text-[16px] sm:text-[17px] text-zinc-800 dark:text-zinc-300">{children}</p>,
     
+    h1: ({ children }: any) => <h1 className="font-google-sans text-3xl sm:text-4xl font-black tracking-tight text-zinc-900 dark:text-white mt-12 mb-6 pb-2 border-b border-zinc-200 dark:border-zinc-800">{children}</h1>,
+    h2: ({ children }: any) => <h2 className="font-google-sans text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white mt-12 mb-6 flex items-center gap-2">{children}</h2>,
+    h3: ({ children }: any) => <h3 className="font-google-sans text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 mt-8 mb-4">{children}</h3>,
+    
+    ul: ({ children }: any) => <ul className="list-disc pl-6 space-y-3 mb-6 font-outfit text-[16px] sm:text-[17px] text-zinc-800 dark:text-zinc-300">{children}</ul>,
+    ol: ({ children }: any) => <ol className="list-decimal pl-6 space-y-3 mb-6 font-outfit text-[16px] sm:text-[17px] text-zinc-800 dark:text-zinc-300">{children}</ol>,
+    li: ({ children, ...props }: any) => <li className="leading-relaxed marker:text-zinc-400 dark:marker:text-zinc-600 pl-1" {...props}>{children}</li>,
+    
+    strong: ({ children }: any) => <strong className="font-bold text-zinc-900 dark:text-white">{children}</strong>,
+    hr: () => <hr className="my-10 border-zinc-200 dark:border-zinc-800/80" />,
+    
+    // Modern Image Renderer with Lightbox support
+    img: ({ src, alt }: any) => (
+      <div className="my-6 w-full relative rounded-2xl overflow-hidden group/img border border-zinc-200 dark:border-zinc-800 shadow-xl bg-zinc-50 dark:bg-[#0c0c0e]">
+        <img 
+          src={src} 
+          alt={alt || "Coaching Content"} 
+          className="w-full max-h-[500px] object-contain cursor-zoom-in transition-all duration-500 hover:scale-105"
+          onClick={() => typeof window !== 'undefined' && window.open(src, '_blank')}
+        />
+        {alt && alt !== "Uploaded Image" && (
+          <div className="absolute bottom-0 left-0 right-0 p-3 bg-black/40 backdrop-blur-md text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-center">
+            {alt}
+          </div>
+        )}
+      </div>
+    ),
+
     a: ({ node, href, children, ...props }: any) => (
       <a 
         href={href} 
         target="_blank" 
         rel="noopener noreferrer" 
-        className="inline text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline underline-offset-2 decoration-blue-500/30 font-semibold transition-colors break-words" 
+        className="inline text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline underline-offset-4 decoration-blue-500/30 font-semibold transition-colors break-words" 
         {...props}
       >
         {children}
@@ -482,17 +587,9 @@ export default function AICoachingMentor() {
     blockquote: ({ children }: any) => {
       const text = extractTextFromNode(children).trim();
       return (
-        <button 
-          onClick={() => submitPrompt(text)}
-          disabled={loading || isTyping}
-          className="w-full text-left mt-4 mb-2 p-5 bg-white dark:bg-[#0c0c0e] hover:bg-zinc-50 dark:hover:bg-[#111113] border border-zinc-200 hover:border-zinc-300 dark:border-zinc-800 dark:hover:border-zinc-700 rounded-2xl text-sm font-outfit font-semibold text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white transition-all flex items-center justify-between group shadow-sm disabled:opacity-50"
-        >
-          <div className="flex items-center gap-3">
-            <Sparkles size={18} className="text-blue-500 shrink-0" />
-            <span className="leading-snug">{text}</span>
-          </div>
-          <ChevronRight size={18} className="text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white group-hover:translate-x-1 transition-all shrink-0" />
-        </button>
+        <div className="w-full mt-6 mb-6 p-6 sm:p-8 bg-zinc-50 dark:bg-[#111113] border-l-4 border-blue-500 rounded-r-2xl shadow-sm">
+          <span className="leading-loose text-[16px] sm:text-[17px] font-outfit italic text-zinc-700 dark:text-zinc-400">{children}</span>
+        </div>
       )
     }
   };
@@ -502,6 +599,23 @@ export default function AICoachingMentor() {
     const isUser = m.role === 'user';
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState(m.content || "");
+
+    // --- 🚀 Feedback System (LocalStorage Persistence) ---
+    const [feedback, setFeedback] = useState<'like' | 'dislike' | null>(null);
+    useEffect(() => {
+      if (m.id) {
+        const stored = localStorage.getItem(`feedback-${m.id}`);
+        if (stored === 'like' || stored === 'dislike') setFeedback(stored);
+      }
+    }, [m.id]);
+
+    const handleFeedback = (type: 'like' | 'dislike') => {
+      if (!m.id) return;
+      const newVal = feedback === type ? null : type;
+      setFeedback(newVal);
+      if (newVal) localStorage.setItem(`feedback-${m.id}`, newVal);
+      else localStorage.removeItem(`feedback-${m.id}`);
+    };
 
     useEffect(() => { setEditValue(m.content || ""); }, [m.content]);
 
@@ -547,7 +661,15 @@ export default function AICoachingMentor() {
         }`}>
           <div className={`prose prose-zinc dark:prose-invert max-w-none break-words w-full ${isUser ? 'prose-p:leading-relaxed prose-p:my-0 prose-p:text-white dark:prose-p:text-zinc-900' : ''}`}>
             {isUser ? (
-              <p className="font-outfit text-[15.5px] sm:text-[16px] m-0 font-medium tracking-wide">{m.content}</p>
+              <ReactMarkdown 
+                remarkPlugins={[remarkGfm]} 
+                components={{
+                  ...MarkdownComponents, 
+                  p: ({children}: any) => <p className="font-outfit text-[15.5px] sm:text-[16px] m-0 font-medium tracking-wide whitespace-pre-wrap">{children}</p>
+                }}
+              >
+                {m.content}
+              </ReactMarkdown>
             ) : (
               <>
                 {contentToRender ? (
@@ -566,6 +688,24 @@ export default function AICoachingMentor() {
         </div>
 
         <div className={`flex items-center gap-1 opacity-100 transition-opacity mt-1.5 ${isUser ? 'mr-2 justify-end' : 'ml-2 justify-start'} sm:opacity-60 sm:hover:opacity-100`}>
+          {!isUser && (
+            <div className="flex items-center gap-0.5">
+              <button 
+                onClick={() => handleFeedback('like')}
+                className={`p-1.5 transition-colors rounded-lg hover:bg-emerald-500/10 ${feedback === 'like' ? 'text-emerald-500' : 'text-zinc-400'}`} 
+                title="Good response"
+              >
+                <ThumbsUp size={14} fill={feedback === 'like' ? 'currentColor' : 'none'} />
+              </button>
+              <button 
+                onClick={() => handleFeedback('dislike')}
+                className={`p-1.5 transition-colors rounded-lg hover:bg-rose-500/10 ${feedback === 'dislike' ? 'text-rose-500' : 'text-zinc-400'}`} 
+                title="Bad response"
+              >
+                <ThumbsDown size={14} fill={feedback === 'dislike' ? 'currentColor' : 'none'} />
+              </button>
+            </div>
+          )}
           <CopyButton text={m.content || ""} />
           
           {isUser && !loading && !isTypingGlobal && (
@@ -611,7 +751,6 @@ export default function AICoachingMentor() {
                 {isSelectMode && (
                   <button 
                     onClick={async () => {
-                      // NO ALERTS: Directly map and delete
                       const ids = filteredSessions.map((s: any) => s.id);
                       for (let id of ids) {
                         await handleDelete({ stopPropagation: () => {} } as any, id);

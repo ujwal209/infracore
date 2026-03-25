@@ -23,6 +23,9 @@ importers:
       '@langchain/langgraph':
         specifier: ^1.1.5
         version: 1.1.5(@langchain/core@1.1.27(openai@6.22.0(ws@8.19.0)(zod@4.3.6)))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(zod-to-json-schema@3.25.1(zod@4.3.6))(zod@4.3.6)
+      '@mixedbread/sdk':
+        specifier: ^0.61.0
+        version: 0.61.0
       '@monaco-editor/react':
         specifier: ^4.7.0
         version: 4.7.0(monaco-editor@0.55.1)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -1052,6 +1055,10 @@ packages:
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': ^1.0.0
+
+  '@mixedbread/sdk@0.61.0':
+    resolution: {integrity: sha512-ybeCctJ01en193ZSVC6KICJo7r3fBjWyR59Tz+uWo2FFyoayINNTFslSjNd06YMcg7qOZFjAp1mGMR+IrdpEkg==}
+    hasBin: true
 
   '@modelcontextprotocol/sdk@1.26.0':
     resolution: {integrity: sha512-Y5RmPncpiDtTXDbLKswIJzTqu2hyBKxTNsgKqKclDbhIgg1wgtf1fRuvxgTnRfcnxtvvgbIEcqUOzZrJ6iSReg==}
@@ -5865,6 +5872,8 @@ snapshots:
     dependencies:
       '@langchain/core': 1.1.27(openai@6.22.0(ws@8.19.0)(zod@4.3.6))
       js-tiktoken: 1.0.21
+
+  '@mixedbread/sdk@0.61.0': {}
 
   '@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@3.25.76)':
     dependencies:

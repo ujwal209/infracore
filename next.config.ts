@@ -7,6 +7,11 @@ const nextConfig: NextConfig = {
     // your project has type errors.
     ignoreBuildErrors: true,
   },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    }, // <-- You were missing this closing brace
+  },
   images: {
     remotePatterns: [
       {

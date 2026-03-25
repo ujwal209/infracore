@@ -178,7 +178,7 @@ export default function LandingPage() {
 
             {/* Fluid Subtitle */}
             <p className="text-[16px] sm:text-[18px] lg:text-[22px] text-zinc-500 dark:text-zinc-400 font-medium leading-[1.6] sm:leading-relaxed max-w-2xl mb-10 sm:mb-12 px-4 sm:px-2">
-              An intelligent, noise-free system designed to simplify your decisions, accelerate your learning, and map out your career path.
+              Transforming Learning, AI Guidance, Redefining Education.
             </p>
 
             {/* CTA Buttons */}
